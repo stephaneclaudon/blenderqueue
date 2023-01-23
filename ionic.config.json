@@ -1,0 +1,7 @@
+{
+  "name": "BlenderQueue",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react"
+}
