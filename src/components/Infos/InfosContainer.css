@@ -1,0 +1,11 @@
+#InfosContainer {
+    height: 40%;
+    display: flex;
+    flex-direction: column;
+}
+
+#InfosContainer #log {
+    overflow-y: scroll;
+    height: inherit;
+    flex-grow: 2;
+}
