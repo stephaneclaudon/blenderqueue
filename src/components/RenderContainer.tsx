@@ -6,13 +6,15 @@ import { GetBlenderFileInfo } from '../services/services';
 import './RenderContainer.css';
 
 export interface RenderContainerProps {
+  index: number,
   blendFile: File,
   /*scenes: Array<string>,
   startFrame: number,
   endFrame: number,
   enabled: boolean,
   status: string,*/
-  onChange: Function
+  onChange: Function,
+  onDelete: Function
 }
 
 
@@ -40,7 +42,11 @@ const RenderContainer: React.FC<RenderContainerProps> = (props) => {
     setEnabled(!enabled);
   };
 
-  console.log(enabled);
+  const deleteItem = () => {
+    props.onDelete();
+  };
+
+  //console.log(enabled);
   
 
 
@@ -60,7 +66,7 @@ const RenderContainer: React.FC<RenderContainerProps> = (props) => {
           <IonCol size="3">
             <IonLabel>{props.blendFile.name}</IonLabel>
           </IonCol>
-          <IonCol >
+          <IonCol>
             <IonSelect placeholder="Scene">
               {blendFileData.map((scene, index) =>
                 <IonSelectOption key={index} value={scene["name"]}>{scene["name"]}</IonSelectOption>
@@ -77,9 +83,10 @@ const RenderContainer: React.FC<RenderContainerProps> = (props) => {
             <IonIcon size="large" icon={informationCircleOutline}></IonIcon>
           </IonCol>
           <IonCol>
-            <IonIcon size="large" icon={trashOutline}></IonIcon>
+            <IonIcon className='delete' onClick={deleteItem} size="large" icon={trashOutline}></IonIcon>
           </IonCol>
         </IonRow>
+
         {initializing &&
           <IonRow>
             <IonProgressBar type={initializing ? 'indeterminate' : 'determinate'}></IonProgressBar>

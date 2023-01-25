@@ -5,16 +5,57 @@ import { RenderContainerProps } from '../components/RenderContainer';
 import InfosContainer from '../components/Infos/InfosContainer';
 import './Home.css';
 
-const Home: React.FC = () => {
-  const [dragging, setDragging] = useState(false);
-  const [renderItems, setRenderItems] = useState<Array<RenderContainerProps>>([]);
-  let renderItemsTemp: Array<RenderContainerProps> = [];
-  let inited = false;
-  let dragCounter = 0;
+let inited = false;
+let dragCounter = 0;
+let filesCount = 0;
 
+
+const Home: React.FC = () => {
+
+  const [dragging, setDragging] = useState(false);
+  const [renderItems, setRenderItems] = useState([] as any);
+  
   const onRenderItemChange = (data: Object) => {
-    console.log("Item has updated", data);
+    //console.log("Item has updated", data);
   };
+
+  const onRenderItemDelete = (id: number) => {
+    setRenderItems(
+      (prevItems: []) => prevItems.filter((item: any) => item.index !== id)
+    );
+    filesCount--;
+    console.log(renderItems);
+  };
+
+  const onDragDrop = (event: DragEvent) => {
+
+    let dataTransfer = event.dataTransfer;
+    if (!dataTransfer || !dataTransfer.files) return;
+    for (let i = 0; i < dataTransfer.files.length; i++) {
+      let file = dataTransfer.files.item(i);
+      if (!file) return;
+      const renderItem = {
+        "index": filesCount,
+        "blendFile": file
+      };
+      /*renderItem.enabled = true;
+      renderItem.startFrame = 1;
+      renderItem.endFrame = 250;
+      renderItem.scenes = ["scene_1", "scenes_2"];
+      renderItem.status = 'pending';*/
+
+      setRenderItems((prevItems: []) =>
+        [
+          ...prevItems,
+          renderItem
+        ]
+      );
+      filesCount++;
+
+      console.log(renderItems);
+    }
+    setDragging(false);
+  }
 
   useEffect(() => {
     if (inited) return;
@@ -23,23 +64,7 @@ const Home: React.FC = () => {
       event.preventDefault();
       event.stopPropagation();
 
-      let dataTransfer = event.dataTransfer;
-      if (!dataTransfer || !dataTransfer.files) return;
-      for (let i = 0; i < dataTransfer.files.length; i++) {
-        let file = dataTransfer.files.item(i);
-        if (!file) return;
-        let renderItem = {} as RenderContainerProps;
-        renderItem.blendFile = file;
-        /*renderItem.enabled = true;
-        renderItem.startFrame = 1;
-        renderItem.endFrame = 250;
-        renderItem.scenes = ["scene_1", "scenes_2"];
-        renderItem.status = 'pending';*/
-
-        renderItemsTemp.push(renderItem);
-        setRenderItems([...renderItemsTemp]);
-      }
-      setDragging(false);
+      onDragDrop(event);
     });
 
     document.addEventListener('dragover', (e) => {
@@ -78,8 +103,8 @@ const Home: React.FC = () => {
 
 
         <IonList id='queue'>
-          {renderItems.map((renderItem, index) =>
-            <RenderContainer key={index} {...renderItem} onChange={onRenderItemChange} />
+          {renderItems.map((renderItem: any, index: number) =>
+            <RenderContainer key={index} {...renderItem} onChange={onRenderItemChange} onDelete={() => onRenderItemDelete(renderItem.index)} />
           )}
         </IonList>
 

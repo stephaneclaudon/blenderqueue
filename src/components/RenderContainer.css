@@ -18,3 +18,7 @@ ion-col {
   opacity: 0.2;
   pointer-events: none;
 }
+
+.renderItem .delete {
+  cursor: pointer;
+}
