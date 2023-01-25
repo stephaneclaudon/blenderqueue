@@ -12,6 +12,10 @@ const Home: React.FC = () => {
   let inited = false;
   let dragCounter = 0;
 
+  const onRenderItemChange = (data: Object) => {
+    console.log("Item has updated", data);
+  };
+
   useEffect(() => {
     if (inited) return;
 
@@ -26,11 +30,11 @@ const Home: React.FC = () => {
         if (!file) return;
         let renderItem = {} as RenderContainerProps;
         renderItem.blendFile = file;
-        renderItem.enabled = true;
+        /*renderItem.enabled = true;
         renderItem.startFrame = 1;
         renderItem.endFrame = 250;
         renderItem.scenes = ["scene_1", "scenes_2"];
-        renderItem.status = 'pending';
+        renderItem.status = 'pending';*/
 
         renderItemsTemp.push(renderItem);
         setRenderItems([...renderItemsTemp]);
@@ -47,7 +51,6 @@ const Home: React.FC = () => {
       event.preventDefault();
       dragCounter++;
       setDragging(true);
-      
     });
 
     document.addEventListener('dragleave', (event) => {
@@ -76,7 +79,7 @@ const Home: React.FC = () => {
 
         <IonList id='queue'>
           {renderItems.map((renderItem, index) =>
-            <RenderContainer key={index} {...renderItem} />
+            <RenderContainer key={index} {...renderItem} onChange={onRenderItemChange} />
           )}
         </IonList>
 

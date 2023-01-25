@@ -1,10 +1,13 @@
 import type { CapacitorElectronConfig } from '@capacitor-community/electron';
 import { getCapacitorElectronConfig, setupElectronDeepLinking } from '@capacitor-community/electron';
 import type { MenuItemConstructorOptions } from 'electron';
-import { app, MenuItem } from 'electron';
+import { app, MenuItem, ipcMain } from 'electron';
+import { exec, execFile, fork, spawn } from "child_process";
+
 import electronIsDev from 'electron-is-dev';
 import unhandled from 'electron-unhandled';
 import { autoUpdater } from 'electron-updater';
+import { join } from 'path';
 
 import { ElectronCapacitorApp, setupContentSecurityPolicy, setupReloadWatcher } from './setup';
 
@@ -69,14 +72,59 @@ app.on('activate', async function () {
 
 // Place all ipc or other electron api calls and custom functionality under this line
 
-console.log("Start Electron exec");
-import { exec, execFile, fork, spawn } from "child_process";
+
+
+
+
+const blenderScriptsPath = join(app.getAppPath(), 'app', 'blender');
+const blenderExtractScriptsPath = join(app.getAppPath(), 'app', 'blender', 'BlenderExtract', 'BlenderExtract.py');
+
+
+ipcMain.handle('BlenderExtract', async (event, arg: Object) => {
+  return new Promise(function (resolve, reject) {
+
+
+    let command = "blender -b --python '" + blenderExtractScriptsPath + "' '" + arg['blendFile'] + "'";
+
+    const execProcess = exec(command, { 'encoding': 'utf8' }, (error, stdout) => {
+      if (error)
+        reject("Error extracting data from blend file...");
+      else {
+        let output = stdout;
+        console.log(output);
+
+        const regexpContent = /---blenderextract---(?<jsonData>(.|\n)*)---blenderextract---/;
+        const match = output.match(regexpContent);
+        const data = JSON.parse(match.groups.jsonData);
+
+        resolve(data);
+      }
+    });
+  });
+});
+
+
+
+/*
+
+console.log("---------------");
 
 function execSample(args: string) {
   const execProcess = exec(args, { 'encoding': 'utf8' }, (error, stdout) => {
-    console.log(`exec stdout: ${stdout} error: ${error}`);
+    if (error)
+      console.log("ERROOOR");
+
+    else {
+      //console.log(`exec stdout: ${stdout} error: ${error}`);
+      let output = stdout;
+        console.log(output);
+
+        const regexpContent = /---blenderextract---(?<jsonData>(.|\n)*)---blenderextract---/;
+        const match = output.match(regexpContent);
+        console.log(JSON.parse(match.groups.jsonData));
+    }
   });
-  console.log('exec spawn');
+ console.log('exec spawn');
   console.log(execProcess.spawnfile);
   execProcess.on('spawn', () => {
     console.log('exec on spawn');
@@ -92,4 +140,5 @@ function execSample(args: string) {
   });
 }
 execSample("blender -b '/Volumes/DATA/RESSOURCES/_BLENDER SCRIPTS/BlednerExtract/BlenderExtract.blend'  --python '/Volumes/DATA/RESSOURCES/_BLENDER SCRIPTS/BlednerExtract/BlenderExtract.py'");
-console.log("End Electron exec");
+console.log("----------------------");
+*/

@@ -6,3 +6,15 @@ ion-col {
   
   color: #fff;
 }
+
+.renderItem {
+
+}
+.renderItem .locked {
+  opacity: 0.2;
+  pointer-events: none;
+}
+.renderItem .disabled ion-col:not(.toggle) {
+  opacity: 0.2;
+  pointer-events: none;
+}
