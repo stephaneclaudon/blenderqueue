@@ -1,103 +1,96 @@
 import React, { useEffect, useState } from 'react';
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonList, IonProgressBar } from '@ionic/react';
 import RenderContainer from '../components/RenderContainer';
-import TestContainerProps from '../components/test';
-import { RenderItemData } from '../components/RenderContainer';
 import InfosContainer from '../components/Infos/InfosContainer';
+import { RenderItemData } from '../data/RenderItemData';
 import './Home.css';
-import { log } from 'console';
+import { subscribe } from '../events/events';
 
-let inited = false;
 let dragCounter = 0;
-
-//let renderData: Array<RenderItemData> = [];
 
 const Home: React.FC = () => {
 
   const [dragging, setDragging] = useState(false);
   const [renderItems, setRenderItems] = useState(new Array<RenderItemData>());
 
-  const onRenderItemChange = (itemData: RenderItemData) => {
-    /*let items: Array<RenderItemData> = renderItems;
-    if (items[itemData.index])
-      items[itemData.index] = itemData
-
-    
-
-    setRenderItems([...items]);*/
+  const onRenderItemChange = (item:RenderItemData) => {
+    item.updateCommand();
+    console.log("onRenderItemChange", renderItems.length);
+    setRenderItems([...renderItems]);
   };
 
   const onRenderItemDelete = (id: number) => {
+
+    console.log("onRenderItemDelete", renderItems.length);
     console.log("removing at ", id);
-    
-    //renderData.splice(id, 1);
-    let items: Array<RenderItemData> = renderItems;
-    items.splice(id, 1);
-    updateIndexes(items);
-
-    setRenderItems([...items]);
+    setRenderItems(
+      [
+        ...renderItems.filter((item, index) =>
+          index !== id
+        )
+      ]
+    );
   };
 
-  const updateIndexes = (items:Array<RenderItemData>) => {
-    for (let index = 0; index < items.length; index++) {
-      console.log(items[index].index, index);
-      
-      items[index].index = index;
-    }
-  };
-
-  const onDragDrop = (event: DragEvent) => {
-
-    console.log("Droped");
+  const onDrop = (event: any) => {
+    event.preventDefault();
+    event.stopPropagation();
 
     let dataTransfer = event.dataTransfer;
     if (!dataTransfer || !dataTransfer.files) return;
 
-    let itemsNew: Array<RenderItemData> = renderItems;
     for (let i = 0; i < dataTransfer.files.length; i++) {
       let file = dataTransfer.files.item(i);
       if (!file) return;
-      const renderItem: RenderItemData = new RenderItemData();
-      renderItem.index = itemsNew.length;
-      renderItem.blendFile = file;
-      itemsNew.push(renderItem);
+      let renderItem: RenderItemData = new RenderItemData(file);
+      renderItems.push(renderItem);
     }
 
-    setRenderItems(itemsNew);
+    setRenderItems([
+      ...renderItems
+    ]);
+
     setDragging(false);
-  }
+  };
+
+  const onDragOver = (event: any) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    console.log("onDragOver length", renderItems.length);
+  };
+
+  const onDragEnter = (event: any) => {
+    event.preventDefault();
+    dragCounter++;
+    setDragging(true);
+  };
+
+  const onDragLeave = (event: any) => {
+    dragCounter--;
+    if (dragCounter === 0)
+      setDragging(false);
+  };
+
 
   useEffect(() => {
-    if (inited) return;
-
-    document.addEventListener('drop', (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-
-      onDragDrop(event);
+    subscribe('updateList', () => {
+      console.log("updateList", renderItems.length);
+      setRenderItems([...renderItems]);
     });
 
-    document.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-    });
+    document.addEventListener('drop', onDrop);
+    document.addEventListener('dragover', onDragOver);
+    document.addEventListener('dragenter', onDragEnter);
+    document.addEventListener('dragleave', onDragLeave);
 
-    document.addEventListener('dragenter', (event) => {
-      event.preventDefault();
-      dragCounter++;
-      setDragging(true);
-    });
-
-    document.addEventListener('dragleave', (event) => {
-      dragCounter--;
-      if (dragCounter === 0)
-        setDragging(false);
-    });
-    inited = true;
-  }, []);
-
-
-  console.log(renderItems);
+    return () => {
+      document.removeEventListener('drop', onDrop);
+      document.removeEventListener('dragover', onDragOver);
+      document.removeEventListener('dragenter', onDragEnter);
+      document.removeEventListener('dragleave', onDragLeave);
+    }
+  }, [renderItems]);
 
 
   return (
@@ -113,15 +106,30 @@ const Home: React.FC = () => {
       </IonHeader>
       <IonContent fullscreen id="content">
 
-        <div>
-        {renderItems.map((renderItem: RenderItemData, index: number) => 
-          <TestContainerProps key={index} name={renderItem.blendFile.name} />
-        )}
-        </div>
-
         <IonList id='queue'>
           {renderItems.map((renderItem: RenderItemData, index: number) =>
-            <RenderContainer data={renderItem} key={index}  onDelete={() => onRenderItemDelete(renderItem.index)} />
+            <RenderContainer
+              data={renderItem}
+              key={index}
+              onDelete={() => onRenderItemDelete(index)}
+              onToggleChange={() => {
+                renderItem.enabled = !renderItem.enabled;
+                onRenderItemChange(renderItem);
+              }}
+              onSceneChange={(sceneName:string) => {
+                renderItem.scene = sceneName;
+                onRenderItemChange(renderItem);
+              }}
+              onStartFrameChange={(frame:number) => {
+                renderItem.startFrame = frame;
+                onRenderItemChange(renderItem);
+              }}
+              onEndFrameChange={(frame:number) => {
+                renderItem.endFrame = frame;
+                onRenderItemChange(renderItem);
+              }}
+              index={index}
+            />
           )}
         </IonList>
 

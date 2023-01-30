@@ -1,152 +1,66 @@
 import React, { useState, useEffect, Children } from 'react';
 import { informationCircleOutline, timeOutline, hardwareChipOutline, trashOutline } from 'ionicons/icons';
 import { IonItem, IonCol, IonGrid, IonInput, IonRow, IonToggle, IonProgressBar, IonLabel, IonSelect, IonSelectOption, IonIcon } from '@ionic/react';
-import { GetBlenderFileInfo } from '../services/services';
+import { RenderItemData } from '../data/RenderItemData';
 
 import './RenderContainer.css';
 
 export interface RenderContainerProps {
-  data: RenderItemData,
- /*onChange: Function,*/
-  onDelete: Function
+  data: RenderItemData;
+  onSceneChange: Function;
+  onStartFrameChange: Function;
+  onEndFrameChange: Function;
+  onToggleChange: Function;
+  onDelete: Function;
+  index: number;
 }
 
-export class RenderItemData {
-  index: number= 0;
-  blendFile: File =  new File([], "-");
-  enabled: boolean = true;
-  scene: string = '';
-  startFrame: number = 0;
-  endFrame: number = 0;
-  status: string = 'pending';
-  command: string = "";
-  blendFileData: Array<any> = [];
-}
 const debug: boolean = true;
 
 const RenderContainer: React.FC<RenderContainerProps> = (props) => {
-  const [initializing, setInitializing] = useState(true);
-  const [data, setData] = useState(props.data);
-
-  useEffect(() => {
-
-    if (!initializing) return;
-    //@ts-ignore
-    GetBlenderFileInfo(data.blendFile.path)
-      .then((dataObject: any) => {
-        let newData:RenderItemData = {...data};
-        newData.blendFileData = dataObject;
-        /*newData.index = props.data.index;*/
-        onSceneChange(newData.blendFileData[0].name, newData);
-        setInitializing(false);
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-  }, []);
-
-  const onSceneChange = (sceneName: string, newData?: RenderItemData) => {
-    let sceneData: any;
-    if (newData) {
-      sceneData = newData.blendFileData.filter((scene: any) => scene.name == sceneName)[0];
-    } else {
-      if (data.blendFileData.length == 0) return;
-      newData = { ...data };
-      sceneData = newData.blendFileData.filter((scene: any) => scene.name == sceneName)[0];
-    }
-
-    newData = {
-      ...newData,
-      scene: sceneName,
-      startFrame: sceneData.start,
-      endFrame: sceneData.end
-    };
-
-    updateData(newData);
-  };
-
-  const updateData = (rData: RenderItemData) => {
-    rData = {
-      ...rData,
-      command: getCommand(rData)
-    } 
-    setData(rData);
-
-    //props.onChange(rData);
-  };
-
-  const OnStartChange = (event: any) => {
-    updateData(
-      {
-        ...data,
-        startFrame: event.target.value as number
-      });
-  }
-  const OnEndChange = (event: any) => {
-    updateData(
-      {
-        ...data,
-        endFrame: event.target.value as number
-      });
-  };
-
-  const OnEnableChange = () => {
-    updateData({
-      ...data,
-      enabled: !data.enabled
-    });
-  };
-
+ 
   const deleteItem = () => {
     props.onDelete();
   };
 
-  const getCommand = (rData: RenderItemData) => {
-    let commandArguments = [
-      "blender -b ",
-      //@ts-ignore
-      data.blendFile.path,
-      "-a",
-      "-S " + rData.scene,
-      "-s " + rData.startFrame,
-      "-e " + rData.endFrame
-    ];
-    return commandArguments.join(' ');
-  };
-
   return (
     <>
-      <IonGrid className='renderItem'>
-        <IonRow className={initializing ? 'locked' : (data.enabled ? '' : 'disabled')}>
+      <IonGrid className={'renderItem'}>
+        <IonRow className={props.data.initializing ? 'locked' : (props.data.enabled ? '' : 'disabled')}>
           <IonCol size="1" className='toggle'>
-            <IonToggle checked={data.enabled} onIonChange={OnEnableChange}></IonToggle>
+            <IonToggle checked={props.data.enabled}
+              onIonChange={(event) => props.onToggleChange(event.target.value)}
+            ></IonToggle>
           </IonCol>
           <IonCol size="1">
-            {(data.status === 'pending') && <IonIcon size="large" icon={timeOutline}></IonIcon>}
-            {(data.status === 'computing') && <IonIcon size="large" icon={hardwareChipOutline}></IonIcon>}
+            {(props.data.status === 'pending') && <IonIcon size="large" icon={timeOutline}></IonIcon>}
+            {(props.data.status === 'computing') && <IonIcon size="large" icon={hardwareChipOutline}></IonIcon>}
           </IonCol>
           <IonCol size="3">
-            <IonLabel>{data.blendFile.name}</IonLabel>
+            <IonLabel>{props.data.blendFile.name}</IonLabel>
           </IonCol>
           <IonCol>
-            <IonSelect placeholder="Scene" onIonChange={(event) => onSceneChange(event.target.value)} value={data.scene}>
-              {data.blendFileData.map((scene, index) =>
-                <IonSelectOption key={index} value={scene["name"]}>{scene["name"]}</IonSelectOption>
+            <IonSelect
+              placeholder="Scene"
+              onIonChange={(event) => props.onSceneChange(event.target.value)}
+              value={props.data.scene}>
+              {!props.data.initializing && props.data.blendFileData.sceneNames.map((sceneName, index) =>
+                <IonSelectOption key={index} value={sceneName}>{sceneName}</IonSelectOption>
               )}
             </IonSelect>
           </IonCol>
           <IonCol>
             <IonInput
-              placeholder={data.startFrame.toString()}
-              onIonChange={OnStartChange}
-              value={data.startFrame}>
+              placeholder={props.data.startFrame.toString()}
+              onIonChange={(event) => props.onStartFrameChange(event.target.value)}
+              value={props.data.startFrame}>
             </IonInput>
           </IonCol>
           <IonCol>
             <IonInput
-              placeholder={data.endFrame.toString()}
-              onIonChange={OnEndChange}
-              value={data.endFrame}>
+              placeholder={props.data.endFrame.toString()}
+              onIonChange={(event) => props.onEndFrameChange(event.target.value)}
+              value={props.data.endFrame}>
 
             </IonInput>
           </IonCol>
@@ -156,17 +70,20 @@ const RenderContainer: React.FC<RenderContainerProps> = (props) => {
           <IonCol>
             <IonIcon className='delete' onClick={deleteItem} size="large" icon={trashOutline}></IonIcon>
           </IonCol>
+          <IonCol>
+            <span>{props.index}</span>
+          </IonCol>
         </IonRow>
 
-        {initializing &&
+        {props.data.initializing &&
           <IonRow>
-            <IonProgressBar type={initializing ? 'indeterminate' : 'determinate'}></IonProgressBar>
+            <IonProgressBar type={props.data.initializing ? 'indeterminate' : 'determinate'}></IonProgressBar>
           </IonRow>
         }
 
         {debug &&
           <IonRow>
-            <p>{data.command}</p>
+            <p>{props.data.command}</p>
           </IonRow>
         }
       </IonGrid>
