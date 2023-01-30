@@ -73,9 +73,6 @@ app.on('activate', async function () {
 // Place all ipc or other electron api calls and custom functionality under this line
 
 
-
-
-
 const blenderScriptsPath = join(app.getAppPath(), 'app', 'blender');
 const blenderExtractScriptsPath = join(app.getAppPath(), 'app', 'blender', 'BlenderExtract', 'BlenderExtract.py');
 
@@ -84,7 +81,7 @@ ipcMain.handle('BlenderExtract', async (event, arg: Object) => {
   return new Promise(function (resolve, reject) {
 
 
-    let command = "blender -b --python '" + blenderExtractScriptsPath + "' '" + arg['blendFile'] + "'";
+    let command = "blender -b '" + arg['blendFile'] + "' --python '" + blenderExtractScriptsPath + "'";
 
     const execProcess = exec(command, { 'encoding': 'utf8' }, (error, stdout) => {
       if (error)
@@ -100,6 +97,37 @@ ipcMain.handle('BlenderExtract', async (event, arg: Object) => {
         resolve(data);
       }
     });
+  });
+});
+
+ipcMain.handle('RunCommand', async (event, arg: Object) => {
+  console.log("running ", arg['binary']);
+  
+  let scriptOutput = "";
+
+  console.log(arg['binary']);
+  console.log(arg['args']);
+  
+  const child = spawn(arg['binary'], arg['args']);
+  child.stdout.setEncoding('utf8');
+  child.stdout.on('data', function (data) {
+    console.log(data);
+    data = data.toString();
+    scriptOutput += data;
+  });
+
+  child.stderr.setEncoding('utf8');
+  child.stderr.on('data', function (data) {
+    //Here is where the error output goes
+    //console.log('stderr: ' + data);
+    data = data.toString();
+    scriptOutput += data;
+  });
+
+  child.on('close', function (code) {
+    //Here you can get the exit code of the script
+    console.log('closing code: ' + code);
+    console.log('Full output of script: ', scriptOutput);
   });
 });
 

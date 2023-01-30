@@ -12,8 +12,9 @@ const Home: React.FC = () => {
 
   const [dragging, setDragging] = useState(false);
   const [renderItems, setRenderItems] = useState(new Array<RenderItemData>());
+  const [currentRenderId, setCurrentRenderId] = useState(0);
 
-  const onRenderItemChange = (item:RenderItemData) => {
+  const onRenderItemChange = (item: RenderItemData) => {
     item.updateCommand();
     console.log("onRenderItemChange", renderItems.length);
     setRenderItems([...renderItems]);
@@ -57,7 +58,6 @@ const Home: React.FC = () => {
     event.preventDefault();
     event.stopPropagation();
 
-    console.log("onDragOver length", renderItems.length);
   };
 
   const onDragEnter = (event: any) => {
@@ -111,20 +111,22 @@ const Home: React.FC = () => {
             <RenderContainer
               data={renderItem}
               key={index}
-              onDelete={() => onRenderItemDelete(index)}
+              onDelete={
+                () => onRenderItemDelete(index)
+              }
               onToggleChange={() => {
                 renderItem.enabled = !renderItem.enabled;
                 onRenderItemChange(renderItem);
               }}
-              onSceneChange={(sceneName:string) => {
+              onSceneChange={(sceneName: string) => {
                 renderItem.scene = sceneName;
                 onRenderItemChange(renderItem);
               }}
-              onStartFrameChange={(frame:number) => {
+              onStartFrameChange={(frame: number) => {
                 renderItem.startFrame = frame;
                 onRenderItemChange(renderItem);
               }}
-              onEndFrameChange={(frame:number) => {
+              onEndFrameChange={(frame: number) => {
                 renderItem.endFrame = frame;
                 onRenderItemChange(renderItem);
               }}
@@ -132,9 +134,9 @@ const Home: React.FC = () => {
             />
           )}
         </IonList>
-
-        <InfosContainer />
-
+        {renderItems.length > 0 &&
+          <InfosContainer renderItem={renderItems[currentRenderId]} />
+        }
       </IonContent>
     </IonPage>
   );

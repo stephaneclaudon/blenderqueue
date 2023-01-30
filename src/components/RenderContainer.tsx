@@ -83,7 +83,7 @@ const RenderContainer: React.FC<RenderContainerProps> = (props) => {
 
         {debug &&
           <IonRow>
-            <p>{props.data.command}</p>
+            <p>{props.data.commandArgs.join(' ')}</p>
           </IonRow>
         }
       </IonGrid>

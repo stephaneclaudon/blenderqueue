@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { informationCircle, trendingUpSharp } from 'ionicons/icons';
-import { IonItem, IonCol, IonGrid, IonInput, IonRow, IonToggle, IonProgressBar, IonLabel, IonSelect, IonSelectOption, IonIcon, IonSegment, IonSegmentButton } from '@ionic/react';
+import { playOutline } from 'ionicons/icons';
+import { IonItem, IonCol, IonGrid, IonInput, IonRow, IonToggle, IonProgressBar, IonLabel, IonSelect, IonSelectOption, IonIcon, IonSegment, IonSegmentButton, IonButton } from '@ionic/react';
 
 import './InfosContainer.css';
+import { RenderItemData } from '../../data/RenderItemData';
+import { RunCommand } from '../../services/services';
 
-interface ContainerProps { }
+interface InfosContainerProps {
+    renderItem: RenderItemData;
+}
 
-const InfosContainer: React.FC<ContainerProps> = () => { 
+const InfosContainer: React.FC<InfosContainerProps> = (props) => {
     const [segment, setSegment] = useState('progress');
 
     const handleSegmentChange = (e: any) => {
@@ -16,23 +20,30 @@ const InfosContainer: React.FC<ContainerProps> = () => {
     const [progress, setProgress] = useState(0);
     const [initializing, setInitializing] = useState(true);
 
+    const startRender = () => {
+        console.log("start rendering...");
+        
+        //@ts-ignore
+        RunCommand('blender', props.renderItem.commandArgs);
+    }
+
     useEffect(() => {
-      const interval = setInterval(() => {
-        setProgress((prevProgress) => prevProgress + 0.01);
-      }, 200);
-  
-      return () => clearInterval(interval);
+        const interval = setInterval(() => {
+            setProgress((prevProgress) => prevProgress + 0.01);
+        }, 200);
+
+        return () => clearInterval(interval);
     }, []);
 
     if (progress > 0.2 && initializing) {
         setInitializing(false);
     }
-  
+
     if (progress > 1) {
-      setTimeout(() => {
-        setProgress(0);
-        setInitializing(true);
-      }, 1000);
+        setTimeout(() => {
+            setProgress(0);
+            setInitializing(true);
+        }, 1000);
     }
 
     return (
@@ -49,7 +60,27 @@ const InfosContainer: React.FC<ContainerProps> = () => {
                 </IonSegment>
                 {segment === 'progress' ?
                     <div id='progress'>
-                        <IonProgressBar value={progress} type={initializing ? 'indeterminate' : 'determinate'}></IonProgressBar>
+
+                        <IonGrid>
+                            <IonRow>
+                                <IonButton onClick={startRender}>
+                                    <IonIcon slot="start" icon={playOutline}></IonIcon>
+                                </IonButton>
+                            </IonRow>
+                            <IonRow>
+                                <IonCol>Elapsed : {props.renderItem.startFrame}</IonCol>
+                                <IonCol>Last frame : {props.renderItem.startFrame}</IonCol>
+                                <IonCol>Remaining : {props.renderItem.startFrame}</IonCol>
+                            </IonRow>
+                            <IonRow>
+                                <IonProgressBar value={progress} type={initializing ? 'indeterminate' : 'determinate'}></IonProgressBar>
+                            </IonRow>
+                            <IonRow>
+                                <IonCol>{props.renderItem.startFrame}</IonCol>
+                                <IonCol>{Math.floor(progress * 100)}%</IonCol>
+                                <IonCol>{props.renderItem.endFrame}</IonCol>
+                            </IonRow>
+                        </IonGrid>
                     </div>
                     :
                     <div id='log'>

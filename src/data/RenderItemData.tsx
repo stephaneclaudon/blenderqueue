@@ -5,6 +5,7 @@ import { publish } from "../events/events";
 interface myCallbackType { (): void }
 
 export class RenderItemData {
+  public blendFileData: BlenderExtractData = new BlenderExtractData();
   public blendFile: File;
   public index: number = 0;
   public initializing: boolean = true;
@@ -13,8 +14,7 @@ export class RenderItemData {
   public startFrame: number = 0;
   public endFrame: number = 0;
   public status: string = 'pending';
-  public command: string = "";
-  public blendFileData: BlenderExtractData = new BlenderExtractData();
+  public commandArgs: Array<string> = [];
 
 
   constructor(blendFile: File) {
@@ -55,8 +55,8 @@ export class RenderItemData {
   }
 
   public updateCommand() {
-    let commandArguments = [
-      "blender -b ",
+    this.commandArgs = [
+      "-b",
       //@ts-ignore
       this.blendFile.path,
       "-a",
@@ -64,7 +64,6 @@ export class RenderItemData {
       "-s " + this.startFrame,
       "-e " + this.endFrame
     ];
-    this.command = commandArguments.join(' ');
   };
 
 }
