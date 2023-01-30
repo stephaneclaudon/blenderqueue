@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonList, IonProgressBar } from '@ionic/react';
 import RenderContainer from '../components/RenderContainer';
+import TestContainerProps from '../components/test';
 import { RenderItemData } from '../components/RenderContainer';
 import InfosContainer from '../components/Infos/InfosContainer';
 import './Home.css';
@@ -8,49 +9,39 @@ import { log } from 'console';
 
 let inited = false;
 let dragCounter = 0;
-let filesCount = 0;
 
-let items: Array<any> = [];
-
-let renderData: Array<RenderItemData> = [];
+//let renderData: Array<RenderItemData> = [];
 
 const Home: React.FC = () => {
 
   const [dragging, setDragging] = useState(false);
-  const [renderItems, setRenderItems] = useState([] as any);
+  const [renderItems, setRenderItems] = useState(new Array<RenderItemData>());
 
   const onRenderItemChange = (itemData: RenderItemData) => {
-    if (renderData[itemData.index])
-      renderData[itemData.index] = itemData
-    else
-      renderData.push(itemData);
+    /*let items: Array<RenderItemData> = renderItems;
+    if (items[itemData.index])
+      items[itemData.index] = itemData
 
+    
 
-    console.log(renderData);
+    setRenderItems([...items]);*/
   };
 
   const onRenderItemDelete = (id: number) => {
-    renderData.splice(id, 1);
+    console.log("removing at ", id);
+    
+    //renderData.splice(id, 1);
+    let items: Array<RenderItemData> = renderItems;
+    items.splice(id, 1);
+    updateIndexes(items);
 
-    items = items.filter((item: any) => {
-      return item.index != id;
-    });
-    setRenderItems(
-      (prevItems: []) => prevItems.filter((item: any) => item.index != id)
-    );
-    filesCount--;
-    updateIndexes();
-
-    console.log(renderData);
+    setRenderItems([...items]);
   };
 
-  const updateIndexes = () => {
-    console.log("updateIndexes", items.length);
-    for (let index = 0; index < renderData.length; index++) {
-      renderData[index].index = index;
-    }
-    
+  const updateIndexes = (items:Array<RenderItemData>) => {
     for (let index = 0; index < items.length; index++) {
+      console.log(items[index].index, index);
+      
       items[index].index = index;
     }
   };
@@ -59,39 +50,17 @@ const Home: React.FC = () => {
 
     console.log("Droped");
 
-
     let dataTransfer = event.dataTransfer;
     if (!dataTransfer || !dataTransfer.files) return;
 
-    let itemsNew: Array<any> = renderItems;
+    let itemsNew: Array<RenderItemData> = renderItems;
     for (let i = 0; i < dataTransfer.files.length; i++) {
       let file = dataTransfer.files.item(i);
       if (!file) return;
-      const renderItem = {
-        "index": itemsNew.length,
-        "blendFile": file
-      };
+      const renderItem: RenderItemData = new RenderItemData();
+      renderItem.index = itemsNew.length;
+      renderItem.blendFile = file;
       itemsNew.push(renderItem);
-      /*renderItem.enabled = true;
-      renderItem.startFrame = 1;
-      renderItem.endFrame = 250;
-      renderItem.scenes = ["scene_1", "scenes_2"];
-      renderItem.status = 'pending';*/
-
-      /*      items.push(renderItem);
-      
-            setRenderItems((prevItems: []) =>
-              [
-                ...prevItems,
-                renderItem
-              ]
-            );
-            filesCount++;
-      
-            //console.log(items);
-      
-            updateIndexes();
-            */
     }
 
     setRenderItems(itemsNew);
@@ -128,6 +97,9 @@ const Home: React.FC = () => {
   }, []);
 
 
+  console.log(renderItems);
+
+
   return (
 
     <IonPage>
@@ -141,11 +113,15 @@ const Home: React.FC = () => {
       </IonHeader>
       <IonContent fullscreen id="content">
 
-
+        <div>
+        {renderItems.map((renderItem: RenderItemData, index: number) => 
+          <TestContainerProps key={index} name={renderItem.blendFile.name} />
+        )}
+        </div>
 
         <IonList id='queue'>
-          {renderItems.map((renderItem: any) =>
-            <RenderContainer {...renderItem} key={renderItem.index} onChange={onRenderItemChange} onDelete={() => onRenderItemDelete(renderItem.index)} />
+          {renderItems.map((renderItem: RenderItemData, index: number) =>
+            <RenderContainer data={renderItem} key={index}  onDelete={() => onRenderItemDelete(renderItem.index)} />
           )}
         </IonList>
 

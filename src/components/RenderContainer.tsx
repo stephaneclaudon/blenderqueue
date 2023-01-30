@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Children } from 'react';
 import { informationCircleOutline, timeOutline, hardwareChipOutline, trashOutline } from 'ionicons/icons';
 import { IonItem, IonCol, IonGrid, IonInput, IonRow, IonToggle, IonProgressBar, IonLabel, IonSelect, IonSelectOption, IonIcon } from '@ionic/react';
 import { GetBlenderFileInfo } from '../services/services';
@@ -6,14 +6,14 @@ import { GetBlenderFileInfo } from '../services/services';
 import './RenderContainer.css';
 
 export interface RenderContainerProps {
-  index: number,
-  blendFile: File,
-  onChange: Function,
+  data: RenderItemData,
+ /*onChange: Function,*/
   onDelete: Function
 }
 
 export class RenderItemData {
   index: number= 0;
+  blendFile: File =  new File([], "-");
   enabled: boolean = true;
   scene: string = '';
   startFrame: number = 0;
@@ -26,17 +26,17 @@ const debug: boolean = true;
 
 const RenderContainer: React.FC<RenderContainerProps> = (props) => {
   const [initializing, setInitializing] = useState(true);
-  const [data, setData] = useState(new RenderItemData());
+  const [data, setData] = useState(props.data);
 
   useEffect(() => {
 
     if (!initializing) return;
     //@ts-ignore
-    GetBlenderFileInfo(props.blendFile.path)
+    GetBlenderFileInfo(data.blendFile.path)
       .then((dataObject: any) => {
-        let newData = new RenderItemData();
+        let newData:RenderItemData = {...data};
         newData.blendFileData = dataObject;
-        newData.index = props.index;
+        /*newData.index = props.data.index;*/
         onSceneChange(newData.blendFileData[0].name, newData);
         setInitializing(false);
       })
@@ -72,7 +72,7 @@ const RenderContainer: React.FC<RenderContainerProps> = (props) => {
     } 
     setData(rData);
 
-    props.onChange(rData);
+    //props.onChange(rData);
   };
 
   const OnStartChange = (event: any) => {
@@ -105,7 +105,7 @@ const RenderContainer: React.FC<RenderContainerProps> = (props) => {
     let commandArguments = [
       "blender -b ",
       //@ts-ignore
-      props.blendFile.path,
+      data.blendFile.path,
       "-a",
       "-S " + rData.scene,
       "-s " + rData.startFrame,
@@ -126,7 +126,7 @@ const RenderContainer: React.FC<RenderContainerProps> = (props) => {
             {(data.status === 'computing') && <IonIcon size="large" icon={hardwareChipOutline}></IonIcon>}
           </IonCol>
           <IonCol size="3">
-            <IonLabel>{props.blendFile.name}</IonLabel>
+            <IonLabel>{data.blendFile.name}</IonLabel>
           </IonCol>
           <IonCol>
             <IonSelect placeholder="Scene" onIonChange={(event) => onSceneChange(event.target.value)} value={data.scene}>
