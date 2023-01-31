@@ -4,47 +4,61 @@ import { IonItem, IonCol, IonGrid, IonInput, IonRow, IonToggle, IonProgressBar, 
 
 import './InfosContainer.css';
 import { RenderItemData } from '../../data/RenderItemData';
-import { RunCommand } from '../../services/services';
+import { RenderJob } from '../../services/services';
+//import { Render } from '../../services/services';
 
 interface InfosContainerProps {
-    renderItem: RenderItemData;
+    renderJob: RenderJob;
 }
 
 const InfosContainer: React.FC<InfosContainerProps> = (props) => {
     const [segment, setSegment] = useState('progress');
+    const [time, setTime] = useState(new Date());
+
+    const timeFormat = (millis: number) => {
+        let strings = [];
+
+        strings.push(Math.floor((millis / (1000 * 60 * 60)) % 24).toString().padStart(2, '0'));
+        strings.push(Math.floor((millis / (1000 * 60)) % 60).toString().padStart(2, '0'));
+        strings.push(Math.floor((millis / 1000) % 60).toString().padStart(2, '0'));
+
+        return strings.join(':');
+    }
 
     const handleSegmentChange = (e: any) => {
         setSegment(e.detail.value);
     };
 
-    const [progress, setProgress] = useState(0);
-    const [initializing, setInitializing] = useState(true);
+    const getProgressPercent = () => {
+        return Math.floor(getProgress() * 100).toString() + '%';
+    };
 
-    const startRender = () => {
-        console.log("start rendering...");
-        
-        //@ts-ignore
-        RunCommand('blender', props.renderItem.commandArgs);
-    }
+    const getProgressString = () => {
+        return props.renderJob.frame.toString() + '/' + (props.renderJob.renderItem.endFrame - props.renderJob.renderItem.startFrame);
+    };
+
+    const getProgress = () => {
+        return props.renderJob.frame / (props.renderJob.renderItem.endFrame - props.renderJob.renderItem.startFrame);
+    };
+
+    
+    const logDiv = React.useRef<HTMLDivElement>(null);
+    React.useEffect(() => {
+        if (logDiv.current) {
+            logDiv.current.scrollTop = logDiv.current.scrollHeight;
+        }
+    });
 
     useEffect(() => {
         const interval = setInterval(() => {
-            setProgress((prevProgress) => prevProgress + 0.01);
-        }, 200);
+            setTime(new Date());
+        }, 1000);
 
-        return () => clearInterval(interval);
+        return () => {
+            clearInterval(interval)
+        };
     }, []);
 
-    if (progress > 0.2 && initializing) {
-        setInitializing(false);
-    }
-
-    if (progress > 1) {
-        setTimeout(() => {
-            setProgress(0);
-            setInitializing(true);
-        }, 1000);
-    }
 
     return (
         <>
@@ -62,55 +76,52 @@ const InfosContainer: React.FC<InfosContainerProps> = (props) => {
                     <div id='progress'>
 
                         <IonGrid>
+
                             <IonRow>
-                                <IonButton onClick={startRender}>
-                                    <IonIcon slot="start" icon={playOutline}></IonIcon>
-                                </IonButton>
+                                
                             </IonRow>
+
+
+
+
                             <IonRow>
-                                <IonCol>Elapsed : {props.renderItem.startFrame}</IonCol>
-                                <IonCol>Last frame : {props.renderItem.startFrame}</IonCol>
-                                <IonCol>Remaining : {props.renderItem.startFrame}</IonCol>
+                                <IonCol size="11">
+                                    <IonProgressBar value={getProgress()} ></IonProgressBar>
+                                </IonCol>
+                                <IonCol size="1">
+                                    {getProgressPercent()}
+                                </IonCol>
                             </IonRow>
-                            <IonRow>
-                                <IonProgressBar value={progress} type={initializing ? 'indeterminate' : 'determinate'}></IonProgressBar>
+                            <IonRow >
+                                <IonCol size="1" class="ion-justify-content-start">{props.renderJob.renderItem.startFrame}</IonCol>
+                                <IonCol size="9">{getProgressString()}</IonCol>
+                                <IonCol size="1" class="ion-justify-content-end">{props.renderJob.renderItem.endFrame}</IonCol>
                             </IonRow>
+
+
                             <IonRow>
-                                <IonCol>{props.renderItem.startFrame}</IonCol>
-                                <IonCol>{Math.floor(progress * 100)}%</IonCol>
-                                <IonCol>{props.renderItem.endFrame}</IonCol>
+                                <IonCol size="4" class="ion-justify-content-start ion-text-left">
+                                    <IonGrid>
+                                        <IonRow><span>Elapsed :</span>{timeFormat(props.renderJob.elapsedTime)}</IonRow>
+                                        <IonRow><span>Remaining :</span>{timeFormat(props.renderJob.remainingTime)}</IonRow>
+                                        <IonRow><span>Last frame :</span>{timeFormat(props.renderJob.lastFrameTime)}</IonRow>
+                                    </IonGrid>
+                                </IonCol>
+
+                                <IonCol size="4">
+                                    <img src={props.renderJob.lastFrameFilePath} alt="Last frame preview" />
+                                </IonCol>
+                                <IonCol size="4">
+
+                                </IonCol>
                             </IonRow>
                         </IonGrid>
                     </div>
                     :
-                    <div id='log'>
+                    <div id='log' ref={logDiv}>
                         <p>
-                            [react-scripts] src/pages/Home.tsx<br />
-                            [react-scripts]   Line 1:73:  'IonProgressBar' is defined but never used     @typescript-eslint/no-unused-vars<br />
-                            [react-scripts]   Line 7:9:   'progress' is assigned a value but never used  @typescript-eslint/no-unused-vars<br />
-                            [react-scripts] Search for the keywords to learn more about each warning.<br />
-                            [react-scripts] To ignore, add // eslint-disable-next-line to the line before.<br />
-                            [react-scripts] WARNING in [eslint] <br />
-                            [react-scripts] src/components/Infos/InfosContainer.tsx<br />
-                            [react-scripts]   Line 2:10:   'informationCircle' is defined but never used  @typescript-eslint/no-unused-vars<br />
-                            [react-scripts]   Line 3:10:   'IonItem' is defined but never used            @typescript-eslint/no-unused-vars<br />
-                            [react-scripts]   Line 3:19:   'IonCol' is defined but never used             @typescript-eslint/no-unused-vars<br />
-                            [react-scripts]   Line 3:27:   'IonGrid' is defined but never used            @typescript-eslint/no-unused-vars<br />
-                            [react-scripts]   Line 3:36:   'IonInput' is defined but never used           @typescript-eslint/no-unused-vars<br />
-                            [react-scripts]   Line 3:46:   'IonRow' is defined but never used             @typescript-eslint/no-unused-vars<br />
-                            [react-scripts]   Line 3:81:   'IonLabel' is defined but never used           @typescript-eslint/no-unused-vars<br />
-                            [react-scripts]   Line 3:91:   'IonSelect' is defined but never used          @typescript-eslint/no-unused-vars<br />
-                            [react-scripts]   Line 3:102:  'IonSelectOption' is defined but never used    @typescript-eslint/no-unused-vars<br />
-                            [react-scripts]   Line 3:119:  'IonIcon' is defined but never used            @typescript-eslint/no-unused-vars<br />
-                            [react-scripts] src/components/RenderContainer.tsx<br />
-                            [react-scripts]   Line 3:19:  'IonCol' is defined but never used          @typescript-eslint/no-unused-vars<br />
-                            [react-scripts]   Line 3:27:  'IonGrid' is defined but never used         @typescript-eslint/no-unused-vars<br />
-                            [react-scripts]   Line 3:46:  'IonRow' is defined but never used          @typescript-eslint/no-unused-vars<br />
-                            [react-scripts]   Line 3:65:  'IonProgressBar' is defined but never used  @typescript-eslint/no-unused-vars<br />
-                            [react-scripts] src/pages/Home.tsx<br />
-                            [react-scripts]   Line 1:73:  'IonProgressBar' is defined but never used     @typescript-eslint/no-unused-vars<br />
-                            [react-scripts]   Line 7:9:   'progress' is assigned a value but never used  @typescript-eslint/no-unused-vars<br />
-                            [react-scripts] webpack compiled with 1 warning<br /></p>
+                            {props.renderJob.outputString}
+                        </p>
                     </div>
                 }
             </div>

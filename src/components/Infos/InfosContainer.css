@@ -8,4 +8,5 @@
     overflow-y: scroll;
     height: inherit;
     flex-grow: 2;
+    white-space: pre-wrap;
 }

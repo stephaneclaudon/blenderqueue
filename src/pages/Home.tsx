@@ -1,18 +1,26 @@
 import React, { useEffect, useState } from 'react';
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonList, IonProgressBar } from '@ionic/react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonList, IonProgressBar, IonButton, IonIcon, IonGrid, IonRow, IonCol, IonImg } from '@ionic/react';
 import RenderContainer from '../components/RenderContainer';
 import InfosContainer from '../components/Infos/InfosContainer';
 import { RenderItemData } from '../data/RenderItemData';
 import './Home.css';
 import { subscribe } from '../events/events';
+import { RenderJob } from '../services/services';
+import { playOutline } from 'ionicons/icons';
+
 
 let dragCounter = 0;
+//let render: RenderJob = new RenderJob(new RenderItemData(new File([], 'toto')));
+//render.start();
 
 const Home: React.FC = () => {
 
   const [dragging, setDragging] = useState(false);
   const [renderItems, setRenderItems] = useState(new Array<RenderItemData>());
-  const [currentRenderId, setCurrentRenderId] = useState(0);
+  const [currentRenderId, setCurrentRenderId] = useState(-1);
+  const [render, setRender] = useState(false);
+
+  const [currentRenderJob, setCurrentRenderJob] = useState<RenderJob>();
 
   const onRenderItemChange = (item: RenderItemData) => {
     item.updateCommand();
@@ -72,6 +80,41 @@ const Home: React.FC = () => {
       setDragging(false);
   };
 
+  const startRender = (renderId:number) => {
+    //console.log("start rendering...");
+    if (!renderItems[renderId].enabled || renderItems[renderId].isDone) {
+      setCurrentRenderId(currentRenderId+1);
+      return;
+    }
+    
+    let render: RenderJob = new RenderJob(renderItems[renderId]);
+    render.onClose = onRenderClose;
+    render.start();
+    setCurrentRenderJob(render);
+  }
+
+  const onRenderClose = (code:number) => {
+    //console.log("Render onClose", code);
+    console.log(currentRenderId, renderItems.length);
+    if (currentRenderId < (renderItems.length - 1)) {
+      setCurrentRenderId(currentRenderId+1);
+    }
+    else {
+      setCurrentRenderJob(undefined);
+      setCurrentRenderId(-1);
+      console.log("terminoch");
+    }
+  };
+
+  console.log("Reloaded", currentRenderId);
+  
+  useEffect(() => {
+    console.log("currentRenderId....", currentRenderId);
+    if (currentRenderId > -1)
+      startRender(currentRenderId);
+    
+  }, [currentRenderId]);
+
 
   useEffect(() => {
     subscribe('updateList', () => {
@@ -90,6 +133,7 @@ const Home: React.FC = () => {
       document.removeEventListener('dragenter', onDragEnter);
       document.removeEventListener('dragleave', onDragLeave);
     }
+
   }, [renderItems]);
 
 
@@ -101,7 +145,21 @@ const Home: React.FC = () => {
       }
       <IonHeader>
         <IonToolbar>
-          <IonTitle>Blender Render Queue</IonTitle>
+          <IonGrid>
+            <IonRow>
+              <IonCol size="1"><IonImg src="/assets/img/blender_logo_no_socket_white.png"></IonImg></IonCol>
+              <IonCol size="11" class="ion-justify-content-end">
+                {renderItems.length > 0 && !(currentRenderJob && currentRenderJob.running) &&
+                  <IonButton onClick={() => setCurrentRenderId(currentRenderId + 1)} color="primary">
+                    <IonIcon icon={playOutline}></IonIcon>
+                    Render
+                  </IonButton>
+                }
+              </IonCol>
+            </IonRow>
+          </IonGrid>
+
+
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen id="content">
@@ -134,8 +192,9 @@ const Home: React.FC = () => {
             />
           )}
         </IonList>
-        {renderItems.length > 0 &&
-          <InfosContainer renderItem={renderItems[currentRenderId]} />
+
+        {currentRenderJob && currentRenderJob.running &&
+          <InfosContainer renderJob={currentRenderJob} />
         }
       </IonContent>
     </IonPage>

@@ -7,6 +7,10 @@ ion-col {
   color: #fff;
 }
 
+.renderItem:nth-of-type(even) {
+  background-color: var(--ion-color-step-100);
+}
+
 .renderItem::before.selected {
   content: "";
   position: absolute;
@@ -26,4 +30,11 @@ ion-col {
 
 .renderItem .delete {
   cursor: pointer;
+}
+
+.renderingIcon {
+  animation: rotate 3s linear infinite;
+}
+@keyframes rotate{
+  to{ transform: rotate(360deg); }
 }

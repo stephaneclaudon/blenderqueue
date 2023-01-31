@@ -2,9 +2,13 @@ import { BlenderExtractData } from "./BlenderExtractData";
 import { GetBlenderFileInfo } from '../services/services';
 import { publish } from "../events/events";
 
-interface myCallbackType { (): void }
 
 export class RenderItemData {
+  public static STATUS_PENDING = 'pending';
+  public static STATUS_RENDERING = 'rendering';
+  public static STATUS_DONE = 'done';
+  public static STATUS_ERROR = 'error';
+
   public blendFileData: BlenderExtractData = new BlenderExtractData();
   public blendFile: File;
   public index: number = 0;
@@ -13,7 +17,7 @@ export class RenderItemData {
   public sceneName: string = '';
   public startFrame: number = 0;
   public endFrame: number = 0;
-  public status: string = 'pending';
+  public status: string = RenderItemData.STATUS_PENDING;
   public commandArgs: Array<string> = [];
 
 
@@ -26,8 +30,6 @@ export class RenderItemData {
       .then((dataObject: BlenderExtractData) => {
         this.blendFileData = dataObject;
         this.scene = this.blendFileData.scenes[0].name;
-        console.log(this.blendFile.name + " loaded");
-        
       })
       .catch((error: any) => {
         console.error(error);
@@ -42,7 +44,6 @@ export class RenderItemData {
     this.startFrame = sceneData.start;
     this.endFrame = sceneData.end;
 
-    console.log("selectScene", sceneName);
   }
 
   public set scene(name: string) {
@@ -52,6 +53,14 @@ export class RenderItemData {
 
   public get scene() {
     return this.sceneName;
+  }
+
+  public get isDone() {
+    return this.status === RenderItemData.STATUS_DONE;
+  }
+
+  public get isRendering() {
+    return this.status === RenderItemData.STATUS_RENDERING;
   }
 
   public updateCommand() {

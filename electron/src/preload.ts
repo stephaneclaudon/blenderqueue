@@ -9,7 +9,7 @@ contextBridge.exposeInMainWorld(
         invoke: (channel, data: Object) => {
 
             console.log("calling invoke!!", channel, data);
-            let validChannels = ["BlenderExtract", "RunCommand"];
+            let validChannels = ["BlenderExtract", "Render"];
             if (validChannels.includes(channel)) {
                 return ipcRenderer.invoke(channel, data); 
             }

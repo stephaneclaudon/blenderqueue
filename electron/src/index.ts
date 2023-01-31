@@ -100,9 +100,7 @@ ipcMain.handle('BlenderExtract', async (event, arg: Object) => {
   });
 });
 
-ipcMain.handle('RunCommand', async (event, arg: Object) => {
-  console.log("running ", arg['binary']);
-  
+ipcMain.handle('Render', (event, arg: Object) => {
   let scriptOutput = "";
 
   console.log(arg['binary']);
@@ -129,6 +127,8 @@ ipcMain.handle('RunCommand', async (event, arg: Object) => {
     console.log('closing code: ' + code);
     console.log('Full output of script: ', scriptOutput);
   });
+
+  return child;
 });
 
 
