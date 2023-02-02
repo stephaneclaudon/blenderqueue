@@ -1,5 +1,5 @@
 import React, { useState, useEffect, Children } from 'react';
-import { informationCircleOutline, timeOutline, hardwareChipOutline, trashOutline, alertCircleOutline, checkmarkCircleOutline, cogOutline } from 'ionicons/icons';
+import { informationCircleOutline, timeOutline, hardwareChipOutline, trashOutline, alertCircleOutline, checkmarkCircleOutline, cogOutline, pauseOutline, pause } from 'ionicons/icons';
 import { IonItem, IonCol, IonGrid, IonInput, IonRow, IonToggle, IonProgressBar, IonLabel, IonSelect, IonSelectOption, IonIcon } from '@ionic/react';
 import { RenderItemData } from '../data/RenderItemData';
 
@@ -13,6 +13,7 @@ export interface RenderContainerProps {
   onToggleChange: Function;
   onDelete: Function;
   index: number;
+  paused: boolean;
 }
 
 const debug: boolean = false;
@@ -36,10 +37,12 @@ const RenderContainer: React.FC<RenderContainerProps> = (props) => {
             }
           </IonCol>
           <IonCol size="1">
-            {(props.data.status === RenderItemData.STATUS_PENDING) && <IonIcon size="large" icon={timeOutline}></IonIcon>}
-            {(props.data.status === RenderItemData.STATUS_RENDERING) && <IonIcon className="renderingIcon" color="warning" size="large" icon={cogOutline}></IonIcon>}
-            {(props.data.status === RenderItemData.STATUS_ERROR) && <IonIcon color="danger" size="large" icon={alertCircleOutline}></IonIcon>}
-            {(props.data.status === RenderItemData.STATUS_DONE) && <IonIcon color="success" size="large" icon={checkmarkCircleOutline}></IonIcon>}
+            {(props.paused) && <IonIcon size="large" color="warning" icon={pause}></IonIcon>}
+
+            {(!props.paused && props.data.status === RenderItemData.STATUS_PENDING) && <IonIcon size="large" icon={timeOutline}></IonIcon>}
+            {(!props.paused && props.data.status === RenderItemData.STATUS_RENDERING) && <IonIcon className="renderingIcon" color="warning" size="large" icon={cogOutline}></IonIcon>}
+            {(!props.paused && props.data.status === RenderItemData.STATUS_ERROR) && <IonIcon color="danger" size="large" icon={alertCircleOutline}></IonIcon>}
+            {(!props.paused && props.data.status === RenderItemData.STATUS_DONE) && <IonIcon color="success" size="large" icon={checkmarkCircleOutline}></IonIcon>}
           </IonCol>
           <IonCol size="3">
             <IonLabel>{props.data.blendFile.name}</IonLabel>

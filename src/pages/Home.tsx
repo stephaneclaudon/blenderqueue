@@ -6,7 +6,7 @@ import { RenderItemData } from '../data/RenderItemData';
 import './Home.css';
 import { subscribe } from '../events/events';
 import { RenderJob } from '../services/services';
-import { pauseOutline, playOutline, stopOutline, stopSharp } from 'ionicons/icons';
+import { pause, pauseOutline, play, playOutline, stopOutline, stopSharp } from 'ionicons/icons';
 
 
 let dragCounter = 0;
@@ -24,14 +24,10 @@ const Home: React.FC = () => {
 
   const onRenderItemChange = (item: RenderItemData) => {
     item.updateCommand();
-    console.log("onRenderItemChange", renderItems.length);
     setRenderItems([...renderItems]);
   };
 
   const onRenderItemDelete = (id: number) => {
-
-    console.log("onRenderItemDelete", renderItems.length);
-    console.log("removing at ", id);
     setRenderItems(
       [
         ...renderItems.filter((item, index) =>
@@ -80,7 +76,7 @@ const Home: React.FC = () => {
       setDragging(false);
   };
 
-  const startRender = (renderId: number) => {
+  const startRender = (renderId: number) => {    
     setCanRender(false);
     if (!renderItems[renderId].enabled || renderItems[renderId].isDone) {
       setCurrentRenderId(currentRenderId + 1);
@@ -94,7 +90,7 @@ const Home: React.FC = () => {
   }
 
   const onRenderClose = (code: number) => {
-    console.log(currentRenderId, renderItems.length);
+    //console.log(currentRenderId, renderItems.length);
     if (currentRenderId < (renderItems.length - 1)) {
       setCurrentRenderId(currentRenderId + 1);
     }
@@ -109,6 +105,15 @@ const Home: React.FC = () => {
       startRender(currentRenderId);
 
   }, [currentRenderId]);
+
+  useEffect(() => {
+    if(stoped) {
+      setStoped(false);
+      setPaused(false);
+      setCurrentRenderJob(undefined);
+      setCurrentRenderId(-1);
+    }
+  }, [stoped]);
 
   useEffect(() => {
     let renderAvailable = false;
@@ -162,7 +167,7 @@ const Home: React.FC = () => {
                     setPaused(true);
                     currentRenderJob.pauseRender();
                   }} color="primary">
-                    <IonIcon icon={pauseOutline}></IonIcon>
+                    <IonIcon icon={pause}></IonIcon>
                     Pause
                   </IonButton>
                 }
@@ -171,14 +176,14 @@ const Home: React.FC = () => {
                     setPaused(false);
                     currentRenderJob.resumeRender();
                   }} color="warning">
-                    <IonIcon icon={playOutline}></IonIcon>
+                    <IonIcon icon={play}></IonIcon>
                     Resume
                   </IonButton>
                 }
                 {(currentRenderJob && currentRenderJob.running) &&
                   <IonButton onClick={() => {
-                    setStoped(true);
                     currentRenderJob.stopRender();
+                    setStoped(true);
                   }} color="danger">
                     <IonIcon icon={stopSharp}></IonIcon>
                     Stop
@@ -203,6 +208,7 @@ const Home: React.FC = () => {
         <IonList id='queue'>
           {renderItems.map((renderItem: RenderItemData, index: number) =>
             <RenderContainer
+              paused={paused}
               data={renderItem}
               key={index}
               onDelete={
@@ -210,6 +216,7 @@ const Home: React.FC = () => {
               }
               onToggleChange={() => {
                 renderItem.enabled = !renderItem.enabled;
+                if(renderItem.enabled) renderItem.status = RenderItemData.STATUS_PENDING;
                 onRenderItemChange(renderItem);
               }}
               onSceneChange={(sceneName: string) => {
