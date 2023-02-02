@@ -24,6 +24,8 @@
     "ionicons": "^6.0.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-hot-keys": "^2.7.2",
+    "react-hotkeys-hook": "^4.3.4",
     "react-router": "^5.2.0",
     "react-router-dom": "^5.2.0",
     "react-scripts": "^5.0.0",

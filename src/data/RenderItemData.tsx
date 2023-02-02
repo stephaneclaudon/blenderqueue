@@ -10,7 +10,8 @@ export class RenderItemData {
   public static STATUS_ERROR = 'error';
 
   public blendFileData: BlenderExtractData = new BlenderExtractData();
-  public blendFile: File;
+  public blendFilePath: string = "";
+  public blendFileName: string = "";
   public index: number = 0;
   public initializing: boolean = true;
   public enabled: boolean = true;
@@ -21,11 +22,16 @@ export class RenderItemData {
   public commandArgs: Array<string> = [];
 
 
-  constructor(blendFile: File) {
-    this.blendFile = blendFile;
+  constructor() {
+    
+  }
 
+  public init (blendFile:File) {
+    this.blendFileName = blendFile.name;
     //@ts-ignore
-    GetBlenderFileInfo(this.blendFile.path)
+    this.blendFilePath = blendFile.path;
+
+    GetBlenderFileInfo(this.blendFilePath)
       .then((dataObject: BlenderExtractData) => {
         this.blendFileData = dataObject;
         this.scene = this.blendFileData.scenes[0].name;
@@ -65,11 +71,10 @@ export class RenderItemData {
   public updateCommand() {
     this.commandArgs = [
       "-b",
-      //@ts-ignore
-      this.blendFile.path,
+      this.blendFilePath,
       "-S", this.scene,
-      "-s", this.startFrame,
-      "-e", this.endFrame,
+      "-s", this.startFrame.toString(),
+      "-e", this.endFrame.toString(),
       "-a"
     ];
   };

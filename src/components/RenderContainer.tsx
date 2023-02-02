@@ -3,6 +3,7 @@ import { informationCircleOutline, timeOutline, hardwareChipOutline, trashOutlin
 import { IonItem, IonCol, IonGrid, IonInput, IonRow, IonToggle, IonProgressBar, IonLabel, IonSelect, IonSelectOption, IonIcon } from '@ionic/react';
 import { RenderItemData } from '../data/RenderItemData';
 
+
 import './RenderContainer.css';
 
 export interface RenderContainerProps {
@@ -12,13 +13,21 @@ export interface RenderContainerProps {
   onEndFrameChange: Function;
   onToggleChange: Function;
   onDelete: Function;
+  onSelect: Function;
   index: number;
   paused: boolean;
+  selected: boolean;
 }
 
 const debug: boolean = false;
 
 const RenderContainer: React.FC<RenderContainerProps> = (props) => {
+
+  const onClick = (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    props.onSelect();
+  }
 
   const deleteItem = () => {
     props.onDelete();
@@ -26,11 +35,15 @@ const RenderContainer: React.FC<RenderContainerProps> = (props) => {
 
   return (
     <>
-      <IonGrid class="renderItem">
-        <IonRow className={(props.data.initializing) ? 'locked' : (props.data.enabled ? '' : 'disabled')}>
+
+      <IonGrid className={props.selected ? 'renderItem selected' : 'renderItem'}>
+        <IonRow
+          className={(props.data.initializing) ? 'locked' : (props.data.enabled ? '' : 'disabled')}
+          onClick={(event) => onClick(event)}>
           <IonCol size="1" className='toggle'>
             {!(props.data.isDone || props.data.isRendering) &&
               <IonToggle
+                color={props.selected ? 'light' : 'primary'}
                 checked={props.data.enabled}
                 onIonChange={(event) => props.onToggleChange(event.target.value)}
               ></IonToggle>
@@ -45,7 +58,7 @@ const RenderContainer: React.FC<RenderContainerProps> = (props) => {
             {(!props.paused && props.data.status === RenderItemData.STATUS_DONE) && <IonIcon color="success" size="large" icon={checkmarkCircleOutline}></IonIcon>}
           </IonCol>
           <IonCol size="3">
-            <IonLabel>{props.data.blendFile.name}</IonLabel>
+            <IonLabel>{props.data.blendFileName}</IonLabel>
           </IonCol>
           <IonCol>
             <IonSelect
@@ -85,7 +98,9 @@ const RenderContainer: React.FC<RenderContainerProps> = (props) => {
             <IonIcon size="large" icon={informationCircleOutline}></IonIcon>
           </IonCol>
           <IonCol>
-            <IonIcon className='delete' onClick={deleteItem} size="large" icon={trashOutline}></IonIcon>
+            {!props.data.isRendering &&
+              <IonIcon className='delete' onClick={deleteItem} size="large" icon={trashOutline}></IonIcon>
+            }
           </IonCol>
         </IonRow>
 

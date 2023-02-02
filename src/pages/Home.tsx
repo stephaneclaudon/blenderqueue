@@ -6,7 +6,10 @@ import { RenderItemData } from '../data/RenderItemData';
 import './Home.css';
 import { subscribe } from '../events/events';
 import { RenderJob } from '../services/services';
-import { pause, pauseOutline, play, playOutline, stopOutline, stopSharp } from 'ionicons/icons';
+import { pause, play, playOutline, stopSharp } from 'ionicons/icons';
+
+import { useHotkeys } from 'react-hotkeys-hook'
+import { isHotkeyPressed } from 'react-hotkeys-hook'
 
 
 let dragCounter = 0;
@@ -16,10 +19,10 @@ const Home: React.FC = () => {
   const [dragging, setDragging] = useState(false);
   const [renderItems, setRenderItems] = useState(new Array<RenderItemData>());
   const [currentRenderId, setCurrentRenderId] = useState(-1);
+  const [selectedRenderItems, setSelectedRenderItems] = useState<Array<number>>([]);
   const [canRender, setCanRender] = useState(false);
   const [paused, setPaused] = useState(false);
   const [stoped, setStoped] = useState(false);
-
   const [currentRenderJob, setCurrentRenderJob] = useState<RenderJob>();
 
   const onRenderItemChange = (item: RenderItemData) => {
@@ -45,9 +48,10 @@ const Home: React.FC = () => {
     if (!dataTransfer || !dataTransfer.files) return;
 
     for (let i = 0; i < dataTransfer.files.length; i++) {
-      let file = dataTransfer.files.item(i);
+      let file: File = dataTransfer.files.item(i);
       if (!file) return;
-      let renderItem: RenderItemData = new RenderItemData(file);
+      let renderItem: RenderItemData = new RenderItemData();
+      renderItem.init(file);
       renderItems.push(renderItem);
     }
 
@@ -76,12 +80,8 @@ const Home: React.FC = () => {
       setDragging(false);
   };
 
-  const startRender = (renderId: number) => {    
+  const startRender = (renderId: number) => {
     setCanRender(false);
-    if (!renderItems[renderId].enabled || renderItems[renderId].isDone) {
-      setCurrentRenderId(currentRenderId + 1);
-      return;
-    }
 
     let render: RenderJob = new RenderJob(renderItems[renderId]);
     render.onClose = onRenderClose;
@@ -90,9 +90,8 @@ const Home: React.FC = () => {
   }
 
   const onRenderClose = (code: number) => {
-    //console.log(currentRenderId, renderItems.length);
-    if (currentRenderId < (renderItems.length - 1)) {
-      setCurrentRenderId(currentRenderId + 1);
+    if (hasNextRenderableItem(currentRenderId)) {
+      setCurrentRenderId(getNextRenderableItemId(currentRenderId));
     }
     else {
       setCurrentRenderJob(undefined);
@@ -100,14 +99,79 @@ const Home: React.FC = () => {
     }
   };
 
+  let hasNextRenderableItem = (startIndex:number):boolean => {
+    let found = false;
+    renderItems.map((item, key) => {
+      if(key > startIndex && item.enabled && !item.isDone && !found){
+        found = true;
+      }
+    });
+    return found;
+  }
+  const getNextRenderableItemId = (startIndex:number):number => {
+    let itemIndex = -1;
+    renderItems.map((item:RenderItemData, key) => {
+      if(key > startIndex && item.enabled && !item.isDone && itemIndex < 0)
+        itemIndex = key;
+    });
+    return itemIndex;
+  }
+
+  const addSelectedItem = (index: number) => {
+    if (isHotkeyPressed(['meta']) || isHotkeyPressed(['control']))
+      setSelectedRenderItems([...selectedRenderItems, index]);
+    else if (isHotkeyPressed(['shift']) && selectedRenderItems.length > 0) {
+      let min = Math.min(index, selectedRenderItems[0]);
+      let max = Math.max(index, selectedRenderItems[selectedRenderItems.length - 1]);
+      let newArr = [];
+
+      for (let ind = min; ind < max + 1; ind++) {
+        newArr.push(ind);
+      }
+
+      setSelectedRenderItems(newArr);
+    } else
+      setSelectedRenderItems([index]);
+  };
+
+  const duplicateSelectedItems = () => {
+    for (let index = 0; index < selectedRenderItems.length; index++) {
+      let clone: RenderItemData = new RenderItemData();
+      Object.assign(clone, renderItems[index]);
+      renderItems.push(clone);
+    }
+    setRenderItems([...renderItems]);
+  };
+
+  const deleteSelectedItems = () => {
+    for (let index = 0; index < selectedRenderItems.length; index++) {
+      renderItems.splice(selectedRenderItems[index], 1);
+    }
+    setRenderItems([...renderItems]);
+  };
+
+  const selectAllItems = () => {
+    setSelectedRenderItems([...renderItems.keys()]);
+  };
+
+
+
+
+  /* ------------------------- */
+  /* -----    EFFECTS    ----- */
+  /* ------------------------- */
+
+  useHotkeys('mod+d', () => duplicateSelectedItems(), {preventDefault: true}, [selectedRenderItems, renderItems]);
+  useHotkeys('mod+a', () => selectAllItems(), {preventDefault: true}, [renderItems]);
+  useHotkeys(['delete', 'backspace'], () => deleteSelectedItems(), { preventDefault: true}, [selectedRenderItems, renderItems]);
+
   useEffect(() => {
     if (currentRenderId > -1)
       startRender(currentRenderId);
-
   }, [currentRenderId]);
 
   useEffect(() => {
-    if(stoped) {
+    if (stoped) {
       setStoped(false);
       setPaused(false);
       setCurrentRenderJob(undefined);
@@ -116,17 +180,9 @@ const Home: React.FC = () => {
   }, [stoped]);
 
   useEffect(() => {
-    let renderAvailable = false;
-    for (const renderItem of renderItems) {
-
-      if (renderItem.enabled && !renderItem.isDone && !renderItem.isRendering) {
-        renderAvailable = true;
-        break;
-      }
-    }
+    let renderAvailable = hasNextRenderableItem(currentRenderId);
     setCanRender(renderAvailable && !(currentRenderJob && currentRenderJob.running));
-
-  }, [renderItems]);
+  }, [renderItems, currentRenderId]);
 
 
   useEffect(() => {
@@ -148,6 +204,8 @@ const Home: React.FC = () => {
     }
 
   }, [renderItems]);
+
+
 
 
   return (
@@ -190,7 +248,7 @@ const Home: React.FC = () => {
                   </IonButton>
                 }
                 {!(currentRenderJob && currentRenderJob.running) &&
-                  <IonButton disabled={!canRender} onClick={() => setCurrentRenderId(currentRenderId + 1)} color="primary">
+                  <IonButton disabled={!canRender} onClick={() => setCurrentRenderId(getNextRenderableItemId(currentRenderId))} color="primary">
                     <IonIcon icon={playOutline}></IonIcon>
                     Render
                   </IonButton>
@@ -205,9 +263,11 @@ const Home: React.FC = () => {
       </IonHeader>
       <IonContent fullscreen id="content">
 
-        <IonList id='queue'>
+        <IonList id='queue' onClick={() => setSelectedRenderItems([])}>
           {renderItems.map((renderItem: RenderItemData, index: number) =>
             <RenderContainer
+              onSelect={() => addSelectedItem(index)}
+              selected={selectedRenderItems.includes(index)}
               paused={paused}
               data={renderItem}
               key={index}
@@ -216,7 +276,7 @@ const Home: React.FC = () => {
               }
               onToggleChange={() => {
                 renderItem.enabled = !renderItem.enabled;
-                if(renderItem.enabled) renderItem.status = RenderItemData.STATUS_PENDING;
+                if (renderItem.enabled) renderItem.status = RenderItemData.STATUS_PENDING;
                 onRenderItemChange(renderItem);
               }}
               onSceneChange={(sceneName: string) => {
