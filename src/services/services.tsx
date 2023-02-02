@@ -31,8 +31,8 @@ export class RenderJob {
     private args: Array<string>;
 
     public onUpdate: () => void = () => { };
-    public onOutput: (data: any) => void = () => { };
     public onError: (data: any) => void = () => { };
+    public onExit: (data: any) => void = () => { };
     public onClose: (code: number) => void = () => { };
 
     public outputString: string = "";
@@ -70,10 +70,8 @@ export class RenderJob {
         this.renderItem.status = RenderItemData.STATUS_RENDERING;
         let lines = [];
 
-
         //If electron not started, return fake data
         try {
-            console.log("window.api.invoke('Render'");
             //@ts-ignore
             window.electronAPI.onRenderUpdate((event, data) => {
                 lines = this.parseLines(data as string);
@@ -82,18 +80,11 @@ export class RenderJob {
                 }
             });
             //@ts-ignore
-            window.electronAPI.onRenderError((event, error) => {
-                this.renderItem.status = RenderItemData.STATUS_ERROR;
-                console.error(error);
-
-                //this.onError(error);
-            });
+            window.electronAPI.onRenderError((event, error) => onRenderError(error));
             //@ts-ignore
-            window.electronAPI.onRenderClose((event, code) => {
-                console.log(code);
-                this.renderItem.status = RenderItemData.STATUS_DONE;
-                //this.onClose(code);
-            });
+            window.electronAPI.onRenderClose((event, code) => onRenderClose(code));
+            //@ts-ignore
+            window.electronAPI.onRenderExit((event, code:number) => onRenderExit(code));
 
             //@ts-ignore
             window.electronAPI.invoke('Render', { 'binary': this.binary, 'args': this.args });
@@ -103,17 +94,19 @@ export class RenderJob {
                 let seek = 0;
                 if (lines) {
                     const interval = () => {
-                        this.parseLine(lines[seek].toString());
-                        console.log(this.stoped ,this.paused);
-
-                        if (seek < (lines.length - 1) && !this.stoped && !this.paused) {
+                        if (seek < (lines.length - 1) && !this.paused && !this.stoped) {
+                            this.parseLine(lines[seek].toString());
                             seek++;
-                            setTimeout(interval, 5);
                         }
                         else if (!this.stoped && !this.paused) {
                             this.renderItem.status = RenderItemData.STATUS_DONE;
-                            this.onClose(1);
+                            this.onRenderClose(1);
+                            return;
+                        } else {
+                            this.onRenderError("Stoped by user");
+                            return;
                         }
+                        setTimeout(interval, 5);
                     };
                     interval();
                 }
@@ -124,20 +117,39 @@ export class RenderJob {
         this.running = true;
     }
 
+    public onRenderError(error: any) {
+        //this.renderItem.status = RenderItemData.STATUS_ERROR;
+        console.error("Render encountered an error ", error);
+        this.onError(error);
+    }
+    public onRenderExit(code: number) {
+        console.error("Render exited with code ", code);
+        this.renderItem.status = RenderItemData.STATUS_ERROR;
+        this.onClose(code);
+    }
+    public onRenderClose(code: number) {
+        console.log("Render closed ", code);
+        this.renderItem.status = RenderItemData.STATUS_DONE;
+        this.onClose(code);
+    }
+
     public stopRender() {
         this.stoped = true;
+        this.running = false;
+        this.paused = false;
+        this.renderItem.status = RenderItemData.STATUS_ERROR;
         //@ts-ignore
-        try { window.electronAPI.invoke('StopRender', {});}catch{}
+        try { window.electronAPI.invoke('StopRender', {}); } catch { }
     }
     public pauseRender() {
         this.paused = true;
         //@ts-ignore
-        try { window.electronAPI.invoke('PauseRender', {});}catch{}
+        try { window.electronAPI.invoke('PauseRender', {}); } catch { }
     }
     public resumeRender() {
         this.paused = false;
         //@ts-ignore
-        try { window.electronAPI.invoke('ResumeRender', {});}catch{}
+        try { window.electronAPI.invoke('ResumeRender', {}); } catch { }
     }
 
     private parseLines(str: string) {
@@ -175,8 +187,6 @@ export class RenderJob {
             if (matches && matches.groups) {
                 //@ts-ignore
                 window.electronAPI.invoke('SavePreview', { 'filePath': matches.groups.lastFrameFilePath }).then((previewFilePath: string) => {
-                    console.log(previewFilePath);
-
                     this.lastFrameFilePath = previewFilePath + '?' + Math.random().toString();
                 });
             }
@@ -198,7 +208,7 @@ export class RenderJob {
 
             this.onUpdate();
         } catch (error) {
-            console.error(error);
+            console.warn(error);
         }
 
     }
