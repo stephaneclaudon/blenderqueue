@@ -7,9 +7,10 @@ import { exec, execFile, fork, spawn } from "child_process";
 import electronIsDev from 'electron-is-dev';
 import unhandled from 'electron-unhandled';
 import { autoUpdater } from 'electron-updater';
-import { join } from 'path';
+import { join as pathJoin } from 'path';
 
 import { ElectronCapacitorApp, setupContentSecurityPolicy, setupReloadWatcher } from './setup';
+import { copyFile } from 'fs/promises';
 
 // Graceful handling of unhandled errors.
 unhandled();
@@ -37,7 +38,7 @@ if (capacitorFileConfig.electron?.deepLinkingEnabled) {
 
 // If we are in Dev mode, use the file watcher components.
 if (electronIsDev) {
-  setupReloadWatcher(myCapacitorApp);
+  //setupReloadWatcher(myCapacitorApp);
 }
 
 // Run Application
@@ -72,17 +73,14 @@ app.on('activate', async function () {
 
 // Place all ipc or other electron api calls and custom functionality under this line
 
-
-const blenderScriptsPath = join(app.getAppPath(), 'app', 'blender');
-const blenderExtractScriptsPath = join(app.getAppPath(), 'app', 'blender', 'BlenderExtract', 'BlenderExtract.py');
+const blenderScriptsPath = pathJoin(app.getAppPath(), 'app', 'blender');
+const tmpFolderPath = pathJoin(app.getAppPath(), 'app', 'tmp');
+const blenderExtractScriptsPath = pathJoin(app.getAppPath(), 'app', 'blender', 'BlenderExtract', 'BlenderExtract.py');
 
 
 ipcMain.handle('BlenderExtract', async (event, arg: Object) => {
   return new Promise(function (resolve, reject) {
-
-
     let command = "blender -b '" + arg['blendFile'] + "' --python '" + blenderExtractScriptsPath + "'";
-
     const execProcess = exec(command, { 'encoding': 'utf8' }, (error, stdout) => {
       if (error)
         reject("Error extracting data from blend file...");
@@ -100,73 +98,67 @@ ipcMain.handle('BlenderExtract', async (event, arg: Object) => {
   });
 });
 
-ipcMain.handle('Render', (event, arg: Object) => {
-  let scriptOutput = "";
+ipcMain.handle('SavePreview', async (event, arg: Object) => {
+  return new Promise(function (resolve, reject) {
+    let previewAbsolutePath = pathJoin(tmpFolderPath, 'renderPreview.png');
+    let previewWebPath = pathJoin('tmp', 'renderPreview.png');
+    try {
+      copyFile(arg['filePath'], previewAbsolutePath).then(() => {
+        resolve(previewWebPath);
+      }).catch((error) => {
+        reject(error);
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+});
 
-  console.log(arg['binary']);
-  console.log(arg['args']);
+let renderProcesses = [];
+ipcMain.handle('Render', (event, arg: Object) => {
+  console.log(arg['binary'], arg['args']);
   
+
   const child = spawn(arg['binary'], arg['args']);
   child.stdout.setEncoding('utf8');
-  child.stdout.on('data', function (data) {
-    console.log(data);
-    data = data.toString();
-    scriptOutput += data;
-  });
-
   child.stderr.setEncoding('utf8');
+
+  child.stdout.on('data', function (data) {
+    myCapacitorApp.getMainWindow().webContents.send('onRenderUpdate', data.toString());
+  });
   child.stderr.on('data', function (data) {
-    //Here is where the error output goes
-    //console.log('stderr: ' + data);
-    data = data.toString();
-    scriptOutput += data;
+    myCapacitorApp.getMainWindow().webContents.send('onRenderError', data.toString());
   });
-
   child.on('close', function (code) {
-    //Here you can get the exit code of the script
-    console.log('closing code: ' + code);
-    console.log('Full output of script: ', scriptOutput);
+    myCapacitorApp.getMainWindow().webContents.send('onRenderClose', code);
   });
+  renderProcesses.push(child);
+});
 
-  return child;
+ipcMain.handle('PauseRender', async (event, arg: Object) => {
+  for (const child of renderProcesses) {
+    child.kill('SIGSTOP');
+  }
+});
+
+ipcMain.handle('ResumeRender', async (event, arg: Object) => {
+  for (const child of renderProcesses) {
+    child.kill('SIGCONT');
+  }
+});
+
+ipcMain.handle('StopRender', async (event, arg: Object) => {
+  for (const child of renderProcesses) {
+    child.kill();
+  }
 });
 
 
+const onAppQuit = () => {
+  for (const child of renderProcesses) {
+    child.kill();
+  }
+};
 
-/*
-
-console.log("---------------");
-
-function execSample(args: string) {
-  const execProcess = exec(args, { 'encoding': 'utf8' }, (error, stdout) => {
-    if (error)
-      console.log("ERROOOR");
-
-    else {
-      //console.log(`exec stdout: ${stdout} error: ${error}`);
-      let output = stdout;
-        console.log(output);
-
-        const regexpContent = /---blenderextract---(?<jsonData>(.|\n)*)---blenderextract---/;
-        const match = output.match(regexpContent);
-        console.log(JSON.parse(match.groups.jsonData));
-    }
-  });
- console.log('exec spawn');
-  console.log(execProcess.spawnfile);
-  execProcess.on('spawn', () => {
-    console.log('exec on spawn');
-  });
-  execProcess.on('error', (err) => {
-    console.log(`exec on error:${err}`);
-  });
-  execProcess.on('exit', (code, signal) => {
-    console.log(`exec on exit code: ${code} signal: ${signal}`);
-  });
-  execProcess.on('close', (code: number, args: any[]) => {
-    console.log(`exec on close code: ${code} args: ${args}`);
-  });
-}
-execSample("blender -b '/Volumes/DATA/RESSOURCES/_BLENDER SCRIPTS/BlednerExtract/BlenderExtract.blend'  --python '/Volumes/DATA/RESSOURCES/_BLENDER SCRIPTS/BlednerExtract/BlenderExtract.py'");
-console.log("----------------------");
-*/
+app.on('will-quit', onAppQuit);
+app.on('before-quit', onAppQuit);

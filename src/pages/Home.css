@@ -4,6 +4,9 @@
     flex-direction: column;
 }
 
+#header {
+}
+
 #queue {
     height: 60%;
 }

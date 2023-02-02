@@ -6,19 +6,19 @@ import { RenderItemData } from '../data/RenderItemData';
 import './Home.css';
 import { subscribe } from '../events/events';
 import { RenderJob } from '../services/services';
-import { playOutline } from 'ionicons/icons';
+import { pauseOutline, playOutline, stopOutline, stopSharp } from 'ionicons/icons';
 
 
 let dragCounter = 0;
-//let render: RenderJob = new RenderJob(new RenderItemData(new File([], 'toto')));
-//render.start();
 
 const Home: React.FC = () => {
 
   const [dragging, setDragging] = useState(false);
   const [renderItems, setRenderItems] = useState(new Array<RenderItemData>());
   const [currentRenderId, setCurrentRenderId] = useState(-1);
-  const [render, setRender] = useState(false);
+  const [canRender, setCanRender] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const [stoped, setStoped] = useState(false);
 
   const [currentRenderJob, setCurrentRenderJob] = useState<RenderJob>();
 
@@ -80,40 +80,48 @@ const Home: React.FC = () => {
       setDragging(false);
   };
 
-  const startRender = (renderId:number) => {
-    //console.log("start rendering...");
+  const startRender = (renderId: number) => {
+    setCanRender(false);
     if (!renderItems[renderId].enabled || renderItems[renderId].isDone) {
-      setCurrentRenderId(currentRenderId+1);
+      setCurrentRenderId(currentRenderId + 1);
       return;
     }
-    
+
     let render: RenderJob = new RenderJob(renderItems[renderId]);
     render.onClose = onRenderClose;
     render.start();
     setCurrentRenderJob(render);
   }
 
-  const onRenderClose = (code:number) => {
-    //console.log("Render onClose", code);
+  const onRenderClose = (code: number) => {
     console.log(currentRenderId, renderItems.length);
     if (currentRenderId < (renderItems.length - 1)) {
-      setCurrentRenderId(currentRenderId+1);
+      setCurrentRenderId(currentRenderId + 1);
     }
     else {
       setCurrentRenderJob(undefined);
       setCurrentRenderId(-1);
-      console.log("terminoch");
     }
   };
 
-  console.log("Reloaded", currentRenderId);
-  
   useEffect(() => {
-    console.log("currentRenderId....", currentRenderId);
     if (currentRenderId > -1)
       startRender(currentRenderId);
-    
+
   }, [currentRenderId]);
+
+  useEffect(() => {
+    let renderAvailable = false;
+    for (const renderItem of renderItems) {
+
+      if (renderItem.enabled && !renderItem.isDone && !renderItem.isRendering) {
+        renderAvailable = true;
+        break;
+      }
+    }
+    setCanRender(renderAvailable && !(currentRenderJob && currentRenderJob.running));
+
+  }, [renderItems]);
 
 
   useEffect(() => {
@@ -143,18 +151,46 @@ const Home: React.FC = () => {
       {
         dragging && <div id="dropFilesOverlay"><span>Drop files here</span></div>
       }
-      <IonHeader>
+      <IonHeader id="header">
         <IonToolbar>
           <IonGrid>
             <IonRow>
               <IonCol size="1"><IonImg src="/assets/img/blender_logo_no_socket_white.png"></IonImg></IonCol>
               <IonCol size="11" class="ion-justify-content-end">
-                {renderItems.length > 0 && !(currentRenderJob && currentRenderJob.running) &&
-                  <IonButton onClick={() => setCurrentRenderId(currentRenderId + 1)} color="primary">
+                {(currentRenderJob && currentRenderJob.running && !currentRenderJob.paused) &&
+                  <IonButton onClick={() => {
+                    setPaused(true);
+                    currentRenderJob.pauseRender();
+                  }} color="primary">
+                    <IonIcon icon={pauseOutline}></IonIcon>
+                    Pause
+                  </IonButton>
+                }
+                {(currentRenderJob && currentRenderJob.paused) &&
+                  <IonButton onClick={() => {
+                    setPaused(false);
+                    currentRenderJob.resumeRender();
+                  }} color="warning">
+                    <IonIcon icon={playOutline}></IonIcon>
+                    Resume
+                  </IonButton>
+                }
+                {(currentRenderJob && currentRenderJob.running) &&
+                  <IonButton onClick={() => {
+                    setStoped(true);
+                    currentRenderJob.stopRender();
+                  }} color="danger">
+                    <IonIcon icon={stopSharp}></IonIcon>
+                    Stop
+                  </IonButton>
+                }
+                {!(currentRenderJob && currentRenderJob.running) &&
+                  <IonButton disabled={!canRender} onClick={() => setCurrentRenderId(currentRenderId + 1)} color="primary">
                     <IonIcon icon={playOutline}></IonIcon>
                     Render
                   </IonButton>
                 }
+
               </IonCol>
             </IonRow>
           </IonGrid>
@@ -197,7 +233,7 @@ const Home: React.FC = () => {
           <InfosContainer renderJob={currentRenderJob} />
         }
       </IonContent>
-    </IonPage>
+    </IonPage >
   );
 };
 

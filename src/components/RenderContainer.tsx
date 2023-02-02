@@ -25,7 +25,7 @@ const RenderContainer: React.FC<RenderContainerProps> = (props) => {
 
   return (
     <>
-      <IonGrid className={'renderItem'}>
+      <IonGrid class="renderItem">
         <IonRow className={(props.data.initializing) ? 'locked' : (props.data.enabled ? '' : 'disabled')}>
           <IonCol size="1" className='toggle'>
             {!(props.data.isDone || props.data.isRendering) &&
@@ -46,6 +46,7 @@ const RenderContainer: React.FC<RenderContainerProps> = (props) => {
           </IonCol>
           <IonCol>
             <IonSelect
+              disabled={(props.data.isDone || props.data.isRendering)}
               placeholder="Scene"
               onIonChange={(event) => props.onSceneChange(event.target.value)}
               value={props.data.scene}>
@@ -55,19 +56,27 @@ const RenderContainer: React.FC<RenderContainerProps> = (props) => {
             </IonSelect>
           </IonCol>
           <IonCol>
-            <IonInput
-              placeholder={props.data.startFrame.toString()}
-              onIonChange={(event) => props.onStartFrameChange(event.target.value)}
-              value={props.data.startFrame}>
-            </IonInput>
+            {(props.data.isDone || props.data.isRendering)
+              ? <span>{props.data.startFrame}</span>
+              : <IonInput
+                placeholder={props.data.startFrame.toString()}
+                onIonChange={(event) => props.onStartFrameChange(event.target.value)}
+                value={props.data.startFrame}>
+              </IonInput>
+            }
+
+
           </IonCol>
           <IonCol>
-            <IonInput
-              placeholder={props.data.endFrame.toString()}
-              onIonChange={(event) => props.onEndFrameChange(event.target.value)}
-              value={props.data.endFrame}>
+            {(props.data.isDone || props.data.isRendering)
+              ? <span>{props.data.endFrame}</span>
+              : <IonInput
+                placeholder={props.data.endFrame.toString()}
+                onIonChange={(event) => props.onEndFrameChange(event.target.value)}
+                value={props.data.endFrame}>
 
-            </IonInput>
+              </IonInput>
+            }
           </IonCol>
           <IonCol>
             <IonIcon size="large" icon={informationCircleOutline}></IonIcon>

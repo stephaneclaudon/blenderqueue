@@ -22,7 +22,6 @@ export class RenderItemData {
 
 
   constructor(blendFile: File) {
-    console.log("New renderitemdata : ", blendFile.name);
     this.blendFile = blendFile;
 
     //@ts-ignore
@@ -68,10 +67,10 @@ export class RenderItemData {
       "-b",
       //@ts-ignore
       this.blendFile.path,
-      "-a",
-      "-S " + this.scene,
-      "-s " + this.startFrame,
-      "-e " + this.endFrame
+      "-S", this.scene,
+      "-s", this.startFrame,
+      "-e", this.endFrame,
+      "-a"
     ];
   };
 
