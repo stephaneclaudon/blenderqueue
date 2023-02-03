@@ -75,7 +75,7 @@ app.on('activate', async function () {
 
 const blenderScriptsPath = pathJoin(app.getAppPath(), 'app', 'blender');
 const tmpFolderPath = pathJoin(app.getAppPath(), 'app', 'tmp');
-const blenderExtractScriptsPath = pathJoin(app.getAppPath(), 'app', 'blender', 'BlenderExtract', 'BlenderExtract.py');
+const blenderExtractScriptsPath = pathJoin(app.getAppPath(), 'assets', 'blender', 'BlenderExtract.py');
 
 
 ipcMain.handle('BlenderExtract', async (event, arg: Object) => {

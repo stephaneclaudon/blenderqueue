@@ -44,3 +44,11 @@ ion-col {
 @keyframes rotate{
   to{ transform: rotate(360deg); }
 }
+
+ion-col {
+  pointer-events: none;
+}
+
+ion-col > * {
+  pointer-events: auto;
+}

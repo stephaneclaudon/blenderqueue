@@ -1,11 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { playOutline } from 'ionicons/icons';
-import { IonItem, IonCol, IonGrid, IonInput, IonRow, IonToggle, IonProgressBar, IonLabel, IonSelect, IonSelectOption, IonIcon, IonSegment, IonSegmentButton, IonButton } from '@ionic/react';
+import { IonCol, IonGrid, IonRow, IonProgressBar, IonLabel, IonSegment, IonSegmentButton } from '@ionic/react';
 
 import './InfosContainer.css';
-import { RenderItemData } from '../../data/RenderItemData';
 import { RenderJob } from '../../services/services';
-//import { Render } from '../../services/services';
 
 interface InfosContainerProps {
     renderJob: RenderJob;

@@ -21,25 +21,39 @@ export class RenderItemData {
   public status: string = RenderItemData.STATUS_PENDING;
   public commandArgs: Array<string> = [];
 
+  constructor() { }
 
-  constructor() {
-    
-  }
-
-  public init (blendFile:File) {
+  public init(blendFile: File, onSuccess: Function, onError: Function=()=>{}) {
     this.blendFileName = blendFile.name;
     //@ts-ignore
     this.blendFilePath = blendFile.path;
+    this.getBlenderFileInfo(onSuccess, onError);
+  }
 
+  public reset(onSuccess: Function, onError: Function=()=>{}) {
+    this.getBlenderFileInfo(onSuccess, onError);
+  }
+
+  private getBlenderFileInfo(onSuccess: Function, onError: Function) {
+    this.initializing = true;
     GetBlenderFileInfo(this.blendFilePath)
       .then((dataObject: BlenderExtractData) => {
         this.blendFileData = dataObject;
         this.scene = this.blendFileData.scenes[0].name;
+        this.status = RenderItemData.STATUS_PENDING;
+        if(onSuccess)
+          onSuccess();
       })
       .catch((error: any) => {
-        console.error(error);
+        this.status = RenderItemData.STATUS_ERROR;
+        publish('errorAlert', {
+          header: 'Error',
+          subHeader: 'Couldn\'t retrieve scenes from ' + this.blendFileName,
+          message: error
+        });
+        if(onError)
+          onError();
       }).finally(() => {
-        publish('updateList', null);
         this.initializing = false;
       });
   }
@@ -48,7 +62,6 @@ export class RenderItemData {
     let sceneData = this.blendFileData.getScene(sceneName);
     this.startFrame = sceneData.start;
     this.endFrame = sceneData.end;
-
   }
 
   public set scene(name: string) {
@@ -60,8 +73,16 @@ export class RenderItemData {
     return this.sceneName;
   }
 
+  public get isReady() {
+    return this.status === RenderItemData.STATUS_PENDING && this.enabled;
+  }
+
   public get isDone() {
     return this.status === RenderItemData.STATUS_DONE;
+  }
+
+  public get hasFailed() {
+    return this.status === RenderItemData.STATUS_ERROR;
   }
 
   public get isRendering() {

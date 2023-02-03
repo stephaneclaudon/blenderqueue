@@ -1,5 +1,5 @@
 import React, { useState, useEffect, Children } from 'react';
-import { informationCircleOutline, timeOutline, hardwareChipOutline, trashOutline, alertCircleOutline, checkmarkCircleOutline, cogOutline, pauseOutline, pause } from 'ionicons/icons';
+import { informationCircleOutline, timeOutline, hardwareChipOutline, trashOutline, alertCircleOutline, checkmarkCircleOutline, cogOutline, pauseOutline, pause, refreshOutline } from 'ionicons/icons';
 import { IonItem, IonCol, IonGrid, IonInput, IonRow, IonToggle, IonProgressBar, IonLabel, IonSelect, IonSelectOption, IonIcon } from '@ionic/react';
 import { RenderItemData } from '../data/RenderItemData';
 
@@ -13,6 +13,7 @@ export interface RenderContainerProps {
   onEndFrameChange: Function;
   onToggleChange: Function;
   onDelete: Function;
+  onRefresh: Function;
   onSelect: Function;
   index: number;
   paused: boolean;
@@ -22,31 +23,33 @@ export interface RenderContainerProps {
 const debug: boolean = false;
 
 const RenderContainer: React.FC<RenderContainerProps> = (props) => {
+  const rowElement = React.useRef<HTMLIonRowElement>(null);
 
   const onClick = (event: React.MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    props.onSelect();
+    if (event.target === rowElement.current) {
+      event.preventDefault();
+      event.stopPropagation();
+      props.onSelect();
+    }
   }
-
-  const deleteItem = () => {
-    props.onDelete();
-  };
 
   return (
     <>
-
       <IonGrid className={props.selected ? 'renderItem selected' : 'renderItem'}>
         <IonRow
+          ref={rowElement}
           className={(props.data.initializing) ? 'locked' : (props.data.enabled ? '' : 'disabled')}
           onClick={(event) => onClick(event)}>
           <IonCol size="1" className='toggle'>
-            {!(props.data.isDone || props.data.isRendering) &&
+            {!(props.data.isDone || props.data.isRendering || props.data.hasFailed) &&
               <IonToggle
                 color={props.selected ? 'light' : 'primary'}
                 checked={props.data.enabled}
                 onIonChange={(event) => props.onToggleChange(event.target.value)}
               ></IonToggle>
+            }
+            {(props.data.hasFailed) &&
+              <IonIcon className='delete' onClick={() => props.onRefresh()} size="large" icon={refreshOutline}></IonIcon>
             }
           </IonCol>
           <IonCol size="1">
@@ -62,7 +65,7 @@ const RenderContainer: React.FC<RenderContainerProps> = (props) => {
           </IonCol>
           <IonCol>
             <IonSelect
-              disabled={(props.data.isDone || props.data.isRendering)}
+              disabled={(props.data.isDone || props.data.isRendering || props.data.hasFailed)}
               placeholder="Scene"
               onIonChange={(event) => props.onSceneChange(event.target.value)}
               value={props.data.scene}>
@@ -72,7 +75,7 @@ const RenderContainer: React.FC<RenderContainerProps> = (props) => {
             </IonSelect>
           </IonCol>
           <IonCol>
-            {(props.data.isDone || props.data.isRendering)
+            {!(props.data.isReady)
               ? <span>{props.data.startFrame}</span>
               : <IonInput
                 placeholder={props.data.startFrame.toString()}
@@ -81,10 +84,9 @@ const RenderContainer: React.FC<RenderContainerProps> = (props) => {
               </IonInput>
             }
 
-
           </IonCol>
           <IonCol>
-            {(props.data.isDone || props.data.isRendering)
+            {!(props.data.isReady)
               ? <span>{props.data.endFrame}</span>
               : <IonInput
                 placeholder={props.data.endFrame.toString()}
@@ -99,7 +101,7 @@ const RenderContainer: React.FC<RenderContainerProps> = (props) => {
           </IonCol>
           <IonCol>
             {!props.data.isRendering &&
-              <IonIcon className='delete' onClick={deleteItem} size="large" icon={trashOutline}></IonIcon>
+              <IonIcon className='delete' onClick={() => props.onDelete()} size="large" icon={trashOutline}></IonIcon>
             }
           </IonCol>
         </IonRow>

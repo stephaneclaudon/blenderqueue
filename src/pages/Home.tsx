@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonList, IonProgressBar, IonButton, IonIcon, IonGrid, IonRow, IonCol, IonImg } from '@ionic/react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonList, IonProgressBar, IonButton, IonIcon, IonGrid, IonRow, IonCol, IonImg, useIonAlert } from '@ionic/react';
 import RenderContainer from '../components/RenderContainer';
 import InfosContainer from '../components/Infos/InfosContainer';
 import { RenderItemData } from '../data/RenderItemData';
 import './Home.css';
-import { subscribe } from '../events/events';
+import { subscribe, unsubscribe } from '../events/events';
 import { RenderJob } from '../services/services';
 import { pause, play, playOutline, stopSharp } from 'ionicons/icons';
 
@@ -24,10 +24,20 @@ const Home: React.FC = () => {
   const [paused, setPaused] = useState(false);
   const [stoped, setStoped] = useState(false);
   const [currentRenderJob, setCurrentRenderJob] = useState<RenderJob>();
+  const [errorAlert] = useIonAlert();
 
   const onRenderItemChange = (item: RenderItemData) => {
     item.updateCommand();
     setRenderItems([...renderItems]);
+  };
+
+  const refreshItem = (item: RenderItemData) => {
+    item.reset(() => {
+      onRenderItemChange(item);
+    }, () => {
+      onRenderItemChange(item);
+    });
+    onRenderItemChange(item);
   };
 
   const onRenderItemDelete = (id: number) => {
@@ -35,6 +45,17 @@ const Home: React.FC = () => {
       [
         ...renderItems.filter((item, index) =>
           index !== id
+        )
+      ]
+    );
+  };
+  const renderItemDelete = (itemToDelete: RenderItemData) => {
+    console.log(Object.is(renderItems[0], itemToDelete));
+    
+    setRenderItems(
+      [
+        ...renderItems.filter((item, index) =>
+          !Object.is(item, itemToDelete)
         )
       ]
     );
@@ -51,7 +72,12 @@ const Home: React.FC = () => {
       let file: File = dataTransfer.files.item(i);
       if (!file) return;
       let renderItem: RenderItemData = new RenderItemData();
-      renderItem.init(file);
+      renderItem.init(file, () => {
+        onRenderItemChange(renderItem);
+      }, () => {
+        //renderItemDelete(renderItem);
+        onRenderItemChange(renderItem);
+      });
       renderItems.push(renderItem);
     }
 
@@ -99,19 +125,19 @@ const Home: React.FC = () => {
     }
   };
 
-  let hasNextRenderableItem = (startIndex:number):boolean => {
+  let hasNextRenderableItem = (startIndex: number): boolean => {
     let found = false;
     renderItems.map((item, key) => {
-      if(key > startIndex && item.enabled && !item.isDone && !found){
+      if (key > startIndex && item.isReady && !found) {
         found = true;
       }
     });
     return found;
   }
-  const getNextRenderableItemId = (startIndex:number):number => {
+  const getNextRenderableItemId = (startIndex: number): number => {
     let itemIndex = -1;
-    renderItems.map((item:RenderItemData, key) => {
-      if(key > startIndex && item.enabled && !item.isDone && itemIndex < 0)
+    renderItems.map((item: RenderItemData, key) => {
+      if (key > startIndex && item.enabled && !item.isDone && itemIndex < 0)
         itemIndex = key;
     });
     return itemIndex;
@@ -154,6 +180,15 @@ const Home: React.FC = () => {
     setSelectedRenderItems([...renderItems.keys()]);
   };
 
+  const onErrorAlert = (data: any) => {
+    errorAlert({
+      header: data.detail.header,
+      subHeader: data.detail.subHeader,
+      message: data.detail.message,
+      buttons: ['CLOSE'],
+    });
+  };
+
 
 
 
@@ -161,9 +196,9 @@ const Home: React.FC = () => {
   /* -----    EFFECTS    ----- */
   /* ------------------------- */
 
-  useHotkeys('mod+d', () => duplicateSelectedItems(), {preventDefault: true}, [selectedRenderItems, renderItems]);
-  useHotkeys('mod+a', () => selectAllItems(), {preventDefault: true}, [renderItems]);
-  useHotkeys(['delete', 'backspace'], () => deleteSelectedItems(), { preventDefault: true}, [selectedRenderItems, renderItems]);
+  useHotkeys('mod+d', () => duplicateSelectedItems(), { preventDefault: true }, [selectedRenderItems, renderItems]);
+  useHotkeys('mod+a', () => selectAllItems(), { preventDefault: true }, [renderItems]);
+  useHotkeys(['delete', 'backspace'], () => deleteSelectedItems(), { preventDefault: true }, [selectedRenderItems, renderItems]);
 
   useEffect(() => {
     if (currentRenderId > -1)
@@ -186,10 +221,7 @@ const Home: React.FC = () => {
 
 
   useEffect(() => {
-    subscribe('updateList', () => {
-      console.log("updateList", renderItems.length);
-      setRenderItems([...renderItems]);
-    });
+    subscribe('errorAlert', onErrorAlert);
 
     document.addEventListener('drop', onDrop);
     document.addEventListener('dragover', onDragOver);
@@ -201,6 +233,8 @@ const Home: React.FC = () => {
       document.removeEventListener('dragover', onDragOver);
       document.removeEventListener('dragenter', onDragEnter);
       document.removeEventListener('dragleave', onDragLeave);
+
+      unsubscribe('errorAlert', onErrorAlert);
     }
 
   }, [renderItems]);
@@ -267,6 +301,7 @@ const Home: React.FC = () => {
           {renderItems.map((renderItem: RenderItemData, index: number) =>
             <RenderContainer
               onSelect={() => addSelectedItem(index)}
+              onRefresh={() => refreshItem(renderItem)}
               selected={selectedRenderItems.includes(index)}
               paused={paused}
               data={renderItem}
