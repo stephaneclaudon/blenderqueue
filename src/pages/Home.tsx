@@ -3,13 +3,14 @@ import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonList, IonProgr
 import RenderContainer from '../components/RenderContainer';
 import InfosContainer from '../components/Infos/InfosContainer';
 import { RenderItemData } from '../data/RenderItemData';
-import './Home.css';
 import { subscribe, unsubscribe } from '../events/events';
 import { RenderJob } from '../services/services';
 import { pause, play, playOutline, stopSharp } from 'ionicons/icons';
 
 import { useHotkeys } from 'react-hotkeys-hook'
 import { isHotkeyPressed } from 'react-hotkeys-hook'
+
+import './Home.css';
 
 
 let dragCounter = 0;
@@ -45,17 +46,6 @@ const Home: React.FC = () => {
       [
         ...renderItems.filter((item, index) =>
           index !== id
-        )
-      ]
-    );
-  };
-  const renderItemDelete = (itemToDelete: RenderItemData) => {
-    console.log(Object.is(renderItems[0], itemToDelete));
-    
-    setRenderItems(
-      [
-        ...renderItems.filter((item, index) =>
-          !Object.is(item, itemToDelete)
         )
       ]
     );
@@ -164,6 +154,7 @@ const Home: React.FC = () => {
     for (let index = 0; index < selectedRenderItems.length; index++) {
       let clone: RenderItemData = new RenderItemData();
       Object.assign(clone, renderItems[index]);
+      clone.resetUuid();
       renderItems.push(clone);
     }
     setRenderItems([...renderItems]);

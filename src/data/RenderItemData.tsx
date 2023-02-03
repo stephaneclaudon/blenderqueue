@@ -1,7 +1,7 @@
-import { BlenderExtractData } from "./BlenderExtractData";
+import { BlenderExtractData, BlenderExtractSceneData } from "./BlenderExtractData";
 import { GetBlenderFileInfo } from '../services/services';
 import { publish } from "../events/events";
-
+import {v4 as uuidv4} from 'uuid';
 
 export class RenderItemData {
   public static STATUS_PENDING = 'pending';
@@ -12,16 +12,23 @@ export class RenderItemData {
   public blendFileData: BlenderExtractData = new BlenderExtractData();
   public blendFilePath: string = "";
   public blendFileName: string = "";
-  public index: number = 0;
   public initializing: boolean = true;
   public enabled: boolean = true;
   public sceneName: string = '';
+  public sceneData: BlenderExtractSceneData = new BlenderExtractSceneData();
   public startFrame: number = 0;
   public endFrame: number = 0;
   public status: string = RenderItemData.STATUS_PENDING;
   public commandArgs: Array<string> = [];
+  public uuid: string = "";
 
-  constructor() { }
+  constructor() {
+    this.resetUuid();
+  }
+
+  public resetUuid() {
+    this.uuid = uuidv4();
+  }
 
   public init(blendFile: File, onSuccess: Function, onError: Function=()=>{}) {
     this.blendFileName = blendFile.name;
@@ -59,9 +66,9 @@ export class RenderItemData {
   }
 
   public selectScene(sceneName: string) {
-    let sceneData = this.blendFileData.getScene(sceneName);
-    this.startFrame = sceneData.start;
-    this.endFrame = sceneData.end;
+    this.sceneData = this.blendFileData.getScene(sceneName);
+    this.startFrame = this.sceneData.start;
+    this.endFrame = this.sceneData.end;
   }
 
   public set scene(name: string) {

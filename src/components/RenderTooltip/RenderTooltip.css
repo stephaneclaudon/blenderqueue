@@ -1,0 +1,18 @@
+ion-popover {
+   /* --background: rgba(40, 173, 218, 0.6);
+    --box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.6);*/
+    --backdrop-opacity: 0.7;
+    --color: white;
+    --width: 400px;
+  }
+  
+  ion-popover ion-content {
+  }
+  
+  ion-popover::part(backdrop) {
+    background-color: rgb(0, 0, 0);
+  }
+
+  .filepath {
+    white-space: nowrap;
+  }

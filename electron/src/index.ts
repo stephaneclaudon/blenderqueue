@@ -80,19 +80,29 @@ const blenderExtractScriptsPath = pathJoin(app.getAppPath(), 'assets', 'blender'
 
 ipcMain.handle('BlenderExtract', async (event, arg: Object) => {
   return new Promise(function (resolve, reject) {
-    let command = "blender -b '" + arg['blendFile'] + "' --python '" + blenderExtractScriptsPath + "'";
-    const execProcess = exec(command, { 'encoding': 'utf8' }, (error, stdout) => {
-      if (error)
-        reject("Error extracting data from blend file...");
-      else {
-        let output = stdout;
-        console.log(output);
+    let outputData:string = "";
+    const spawn = require('child_process').spawn;
+    const scriptExecution = spawn("blender", ['-b', arg['blendFile'], '--python', blenderExtractScriptsPath]);
+    scriptExecution.stdout.setEncoding('utf8');
+    scriptExecution.stderr.setEncoding('utf8');
 
+    scriptExecution.stdout.on('data', (stdout:any) => {
+      outputData = outputData + stdout.toString();
+    });
+
+    scriptExecution.stderr.on('data', (stderr:any) => {
+      reject(stderr.toString());
+    });
+
+    scriptExecution.on('exit', (code:any) => {
+      try {
         const regexpContent = /---blenderextract---(?<jsonData>(.|\n)*)---blenderextract---/;
-        const match = output.match(regexpContent);
+        const match = outputData.match(regexpContent);
         const data = JSON.parse(match.groups.jsonData);
 
         resolve(data);
+      } catch (error) {
+        reject(error);
       }
     });
   });
@@ -117,7 +127,7 @@ ipcMain.handle('SavePreview', async (event, arg: Object) => {
 let renderProcesses = [];
 ipcMain.handle('Render', (event, arg: Object) => {
   console.log(arg['binary'], arg['args']);
-  
+
 
   const child = spawn(arg['binary'], arg['args']);
   child.stdout.setEncoding('utf8');

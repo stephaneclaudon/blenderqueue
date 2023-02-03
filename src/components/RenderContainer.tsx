@@ -1,10 +1,11 @@
-import React, { useState, useEffect, Children } from 'react';
-import { informationCircleOutline, timeOutline, hardwareChipOutline, trashOutline, alertCircleOutline, checkmarkCircleOutline, cogOutline, pauseOutline, pause, refreshOutline } from 'ionicons/icons';
-import { IonItem, IonCol, IonGrid, IonInput, IonRow, IonToggle, IonProgressBar, IonLabel, IonSelect, IonSelectOption, IonIcon } from '@ionic/react';
+import React from 'react';
+import { informationCircleOutline, timeOutline, trashOutline, alertCircleOutline, checkmarkCircleOutline, cogOutline, pauseOutline, pause, refreshOutline } from 'ionicons/icons';
+import { IonCol, IonGrid, IonInput, IonRow, IonToggle, IonProgressBar, IonLabel, IonSelect, IonSelectOption, IonIcon, IonPopover, IonContent } from '@ionic/react';
 import { RenderItemData } from '../data/RenderItemData';
 
 
 import './RenderContainer.css';
+import RenderTooltip from './RenderTooltip/RenderTooltip';
 
 export interface RenderContainerProps {
   data: RenderItemData;
@@ -54,16 +55,15 @@ const RenderContainer: React.FC<RenderContainerProps> = (props) => {
           </IonCol>
           <IonCol size="1">
             {(props.paused) && <IonIcon size="large" color="warning" icon={pause}></IonIcon>}
-
             {(!props.paused && props.data.status === RenderItemData.STATUS_PENDING) && <IonIcon size="large" icon={timeOutline}></IonIcon>}
             {(!props.paused && props.data.status === RenderItemData.STATUS_RENDERING) && <IonIcon className="renderingIcon" color="warning" size="large" icon={cogOutline}></IonIcon>}
             {(!props.paused && props.data.status === RenderItemData.STATUS_ERROR) && <IonIcon color="danger" size="large" icon={alertCircleOutline}></IonIcon>}
             {(!props.paused && props.data.status === RenderItemData.STATUS_DONE) && <IonIcon color="success" size="large" icon={checkmarkCircleOutline}></IonIcon>}
           </IonCol>
-          <IonCol size="3">
+          <IonCol size="3" class="ion-justify-content-start">
             <IonLabel>{props.data.blendFileName}</IonLabel>
           </IonCol>
-          <IonCol>
+          <IonCol size="3" class="ion-justify-content-start">
             <IonSelect
               disabled={(props.data.isDone || props.data.isRendering || props.data.hasFailed)}
               placeholder="Scene"
@@ -74,7 +74,7 @@ const RenderContainer: React.FC<RenderContainerProps> = (props) => {
               )}
             </IonSelect>
           </IonCol>
-          <IonCol>
+          <IonCol size="1">
             {!(props.data.isReady)
               ? <span>{props.data.startFrame}</span>
               : <IonInput
@@ -85,7 +85,7 @@ const RenderContainer: React.FC<RenderContainerProps> = (props) => {
             }
 
           </IonCol>
-          <IonCol>
+          <IonCol size="1">
             {!(props.data.isReady)
               ? <span>{props.data.endFrame}</span>
               : <IonInput
@@ -96,10 +96,15 @@ const RenderContainer: React.FC<RenderContainerProps> = (props) => {
               </IonInput>
             }
           </IonCol>
-          <IonCol>
-            <IonIcon size="large" icon={informationCircleOutline}></IonIcon>
+          <IonCol size="1">
+            <IonIcon id={props.data.uuid} size="large" icon={informationCircleOutline}></IonIcon>
+            <IonPopover trigger={props.data.uuid} triggerAction="hover"  side="bottom" alignment="start"  size="auto">
+              <IonContent class="ion-padding">
+                <RenderTooltip data={props.data}></RenderTooltip>
+              </IonContent>
+            </IonPopover>
           </IonCol>
-          <IonCol>
+          <IonCol size="1">
             {!props.data.isRendering &&
               <IonIcon className='delete' onClick={() => props.onDelete()} size="large" icon={trashOutline}></IonIcon>
             }
