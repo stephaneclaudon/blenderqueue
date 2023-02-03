@@ -219,6 +219,21 @@ const Home: React.FC = () => {
     document.addEventListener('dragenter', onDragEnter);
     document.addEventListener('dragleave', onDragLeave);
 
+
+    //TODO : save session
+    /*
+    //@ts-ignore
+    console.log(window.electronAPI.invoke('GetSettings', { settingName: 'session' }));
+    //@ts-ignore
+    window.electronAPI.invoke('SaveSettings', { settingName: 'session', value : renderItems });
+    //@ts-ignore
+    console.log(window.electronAPI.invoke('GetSettings', { settingName: 'session' }));
+  */
+
+
+
+
+
     return () => {
       document.removeEventListener('drop', onDrop);
       document.removeEventListener('dragover', onDragOver);

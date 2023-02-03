@@ -12,6 +12,10 @@ import { join as pathJoin } from 'path';
 import { ElectronCapacitorApp, setupContentSecurityPolicy, setupReloadWatcher } from './setup';
 import { copyFile } from 'fs/promises';
 
+
+import Store from 'electron-store';
+import { blenderQueueSettings } from './settings';
+
 // Graceful handling of unhandled errors.
 unhandled();
 
@@ -161,6 +165,17 @@ ipcMain.handle('StopRender', async (event, arg: Object) => {
   for (const child of renderProcesses) {
     child.kill();
   }
+});
+
+//@ts-ignore
+const store = new Store({blenderQueueSettings});
+
+ipcMain.handle('GetSettings', async (event, arg: Object) => {
+  return store.get(arg['settingName']);
+});
+
+ipcMain.handle('SaveSettings', async (event, arg: Object) => {
+  store.set(arg['settingName'], arg['value']);
 });
 
 

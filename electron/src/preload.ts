@@ -16,7 +16,9 @@ contextBridge.exposeInMainWorld(
             "StopRender",
             "PauseRender",
             "ResumeRender",
-            "SavePreview"
+            "SavePreview",
+            "GetSettings",
+            "SaveSettings"
         ];
         if (validChannels.includes(channel)) {
             return ipcRenderer.invoke(channel, data);
