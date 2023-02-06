@@ -21,6 +21,7 @@
     "@types/react-router": "^5.1.11",
     "@types/react-router-dom": "^5.1.7",
     "@types/uuid": "^9.0.0",
+    "command-exists-promise": "^2.0.2",
     "electron-store": "^8.1.0",
     "history": "^4.9.0",
     "ionicons": "^6.0.3",

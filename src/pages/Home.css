@@ -2,6 +2,13 @@
     user-select: none; /* Standard syntax */
 }
 
+#open-settings {
+    cursor: pointer;
+}
+#open-settings:hover {
+    transform: scale(1.08);
+}
+
 
 #content {
     display: flex;

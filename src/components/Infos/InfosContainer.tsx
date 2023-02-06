@@ -31,11 +31,11 @@ const InfosContainer: React.FC<InfosContainerProps> = (props) => {
     };
 
     const getProgressString = () => {
-        return props.renderJob.frame.toString() + '/' + (props.renderJob.renderItem.endFrame - props.renderJob.renderItem.startFrame);
+        return props.renderJob.frame.toString() + '/' + (props.renderJob.renderItem.endFrame - props.renderJob.renderItem.startFrame + 1);
     };
 
     const getProgress = () => {
-        return props.renderJob.frame / (props.renderJob.renderItem.endFrame - props.renderJob.renderItem.startFrame);
+        return props.renderJob.frame / (props.renderJob.renderItem.endFrame - props.renderJob.renderItem.startFrame + 1);
     };
 
     

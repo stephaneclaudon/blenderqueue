@@ -1,16 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonList, IonProgressBar, IonButton, IonIcon, IonGrid, IonRow, IonCol, IonImg, useIonAlert } from '@ionic/react';
+import React, { useEffect, useRef, useState } from 'react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonList, IonProgressBar, IonButton, IonIcon, IonGrid, IonRow, IonCol, IonImg, useIonAlert, IonModal } from '@ionic/react';
 import RenderContainer from '../components/RenderContainer';
 import InfosContainer from '../components/Infos/InfosContainer';
 import { RenderItemData } from '../data/RenderItemData';
 import { subscribe, unsubscribe } from '../events/events';
-import { RenderJob } from '../services/services';
-import { pause, play, playOutline, stopSharp } from 'ionicons/icons';
+import { GetData, RenderJob } from '../services/services';
+import { cog, pause, play, playOutline, stopSharp } from 'ionicons/icons';
 
 import { useHotkeys } from 'react-hotkeys-hook'
 import { isHotkeyPressed } from 'react-hotkeys-hook'
 
 import './Home.css';
+import Settings from '../components/Settings/Settings';
 
 
 let dragCounter = 0;
@@ -101,6 +102,7 @@ const Home: React.FC = () => {
 
     let render: RenderJob = new RenderJob(renderItems[renderId]);
     render.onClose = onRenderClose;
+    render.onError = onRenderClose;
     render.start();
     setCurrentRenderJob(render);
   }
@@ -219,21 +221,6 @@ const Home: React.FC = () => {
     document.addEventListener('dragenter', onDragEnter);
     document.addEventListener('dragleave', onDragLeave);
 
-
-    //TODO : save session
-    /*
-    //@ts-ignore
-    console.log(window.electronAPI.invoke('GetSettings', { settingName: 'session' }));
-    //@ts-ignore
-    window.electronAPI.invoke('SaveSettings', { settingName: 'session', value : renderItems });
-    //@ts-ignore
-    console.log(window.electronAPI.invoke('GetSettings', { settingName: 'session' }));
-  */
-
-
-
-
-
     return () => {
       document.removeEventListener('drop', onDrop);
       document.removeEventListener('dragover', onDragOver);
@@ -248,6 +235,12 @@ const Home: React.FC = () => {
 
 
 
+  const onSettingsUpdated = () => {
+    console.log("onSettingsUpdated", GetData());
+  };
+
+
+
   return (
 
     <IonPage>
@@ -259,7 +252,19 @@ const Home: React.FC = () => {
           <IonGrid>
             <IonRow>
               <IonCol size="1"><IonImg src="/assets/img/blender_logo_no_socket_white.png"></IonImg></IonCol>
+
               <IonCol size="11" class="ion-justify-content-end">
+                <IonCol size="1">
+
+                  {!(currentRenderJob && currentRenderJob.running) &&
+                    <IonIcon id="open-settings" size="large" icon={cog}></IonIcon>
+                  }
+                  <Settings onSettingsUpdated={onSettingsUpdated}></Settings>
+
+
+
+                </IonCol>
+
                 {(currentRenderJob && currentRenderJob.running && !currentRenderJob.paused) &&
                   <IonButton onClick={() => {
                     setPaused(true);

@@ -1,6 +1,46 @@
 import { BlenderExtractData } from "../data/BlenderExtractData";
 import { RenderItemData } from "../data/RenderItemData";
+import { BlenderQueueData } from "../data/SettingsData";
 import { mockoutput } from './data-mock/blender-output-cycles';
+
+export const GetData = () => {
+    return new Promise<BlenderQueueData>(function (resolve, reject) {
+        //If electron not started, return fake data
+        try {
+            //@ts-ignore
+            return window.electronAPI.invoke('GetData', { settingName: 'data' }).then(function (res: any) {
+                let data: BlenderQueueData = Object.assign(new BlenderQueueData(), res);
+                resolve(data);
+            })
+                .catch(function (err: any) {
+                    reject(err);
+                });
+        } catch (error) {
+            console.warn('GetData(), electron not started, returning fake data');
+            setTimeout(() => {
+                resolve(new BlenderQueueData());
+            }, 1500);
+        }
+    });
+}
+
+export const SaveData = (data: BlenderQueueData) => {
+    return new Promise(function (resolve, reject) {
+        //If electron not started, return fake data
+        try {
+            //@ts-ignore
+            window.electronAPI.invoke(
+                'SaveData', data).then(function (res: any) {
+                    resolve(res);
+                }).catch(function (err: any) {
+                    reject(err);
+                });
+        } catch (error) {
+            console.warn('SaveSettings(), electron not started, data will be lost');
+            resolve({});
+        }
+    });
+}
 
 export const GetBlenderFileInfo = async (blendFilePath: string) => {
     return new Promise<BlenderExtractData | any>(function (resolve, reject) {
@@ -28,7 +68,6 @@ export const GetBlenderFileInfo = async (blendFilePath: string) => {
 
 export class RenderJob {
 
-    private binary: string;
     private args: Array<string>;
 
     public onUpdate: () => void = () => { };
@@ -59,7 +98,6 @@ export class RenderJob {
 
     constructor(renderItem: RenderItemData) {
         this.renderItem = renderItem;
-        this.binary = 'blender';
         this.args = this.renderItem.commandArgs;
         this.frame = this.renderItem.startFrame;
     }
@@ -81,15 +119,22 @@ export class RenderJob {
                 }
             });
             //@ts-ignore
-            window.electronAPI.onRenderError((event, error) => onRenderError(error));
+            window.electronAPI.onRenderError(
+                (event: any, error: any) => this.onRenderError(error)
+            );
             //@ts-ignore
-            window.electronAPI.onRenderClose((event, code) => onRenderClose(code));
-            //@ts-ignore
-            window.electronAPI.onRenderExit((event, code:number) => onRenderExit(code));
+            window.electronAPI.onRenderClose(
+                (event: any, code: any) => this.onRenderClose(code)
+            );
 
             //@ts-ignore
-            window.electronAPI.invoke('Render', { 'binary': this.binary, 'args': this.args });
+            window.electronAPI.invoke(
+                'Render',
+                {
+                    'args': this.args
+                });
         } catch (error) {
+            console.warn("RenderJob::Start(), electron not started, returning fake data", error);
             const lines = this.parseLines(mockoutput);
             try {
                 let seek = 0;
@@ -119,19 +164,20 @@ export class RenderJob {
     }
 
     public onRenderError(error: any) {
-        //this.renderItem.status = RenderItemData.STATUS_ERROR;
         console.error("Render encountered an error ", error);
+        this.stoped = true;
+        this.running = false;
+        this.paused = false;
+        this.renderItem.status = RenderItemData.STATUS_ERROR;
         this.onError(error);
     }
-    public onRenderExit(code: number) {
-        console.error("Render exited with code ", code);
-        this.renderItem.status = RenderItemData.STATUS_ERROR;
-        this.onClose(code);
-    }
+
     public onRenderClose(code: number) {
-        console.log("Render closed ", code);
-        this.renderItem.status = RenderItemData.STATUS_DONE;
-        this.onClose(code);
+        if (!this.renderItem.hasFailed) {
+            console.log("Render closed ", code);
+            this.renderItem.status = RenderItemData.STATUS_DONE;
+            this.onClose(code);
+        }
     }
 
     public stopRender() {

@@ -13,8 +13,7 @@ import { ElectronCapacitorApp, setupContentSecurityPolicy, setupReloadWatcher } 
 import { copyFile } from 'fs/promises';
 
 
-import Store from 'electron-store';
-import { blenderQueueSettings } from './settings';
+import { BlenderQueueData, DataManager } from './data';
 
 // Graceful handling of unhandled errors.
 unhandled();
@@ -44,7 +43,7 @@ if (capacitorFileConfig.electron?.deepLinkingEnabled) {
 if (electronIsDev) {
   //setupReloadWatcher(myCapacitorApp);
 }
-
+/*
 // Run Application
 (async () => {
   // Wait for electron app to be ready.
@@ -52,10 +51,13 @@ if (electronIsDev) {
   // Security - Set Content-Security-Policy based on whether or not we are in dev mode.
   setupContentSecurityPolicy(myCapacitorApp.getCustomURLScheme());
   // Initialize our app, build windows, and load content.
+  console.log("INITING APP--------------------");
+  
   await myCapacitorApp.init();
   // Check for updates if we are in a packaged app.
   autoUpdater.checkForUpdatesAndNotify();
 })();
+*/
 
 // Handle when all of our windows are close (platforms have their own expectations).
 app.on('window-all-closed', function () {
@@ -75,30 +77,61 @@ app.on('activate', async function () {
   }
 });
 
+
+
+
+
+
+
+
 // Place all ipc or other electron api calls and custom functionality under this line
 
-const blenderScriptsPath = pathJoin(app.getAppPath(), 'app', 'blender');
+let dataManager = new DataManager();
+dataManager.init().then((response:string) => {
+  console.log(response);
+  console.log("Data inited, lauching app...");
+  // Run Application
+  (async () => {
+    // Wait for electron app to be ready.
+    await app.whenReady();
+    // Security - Set Content-Security-Policy based on whether or not we are in dev mode.
+    setupContentSecurityPolicy(myCapacitorApp.getCustomURLScheme());
+    // Initialize our app, build windows, and load content.
+    console.log("INITING APP--------------------");
+
+    await myCapacitorApp.init();
+    // Check for updates if we are in a packaged app.
+    autoUpdater.checkForUpdatesAndNotify();
+  })();
+}).catch(() => {
+  console.log("Error initing data...");
+});
+
+
 const tmpFolderPath = pathJoin(app.getAppPath(), 'app', 'tmp');
 const blenderExtractScriptsPath = pathJoin(app.getAppPath(), 'assets', 'blender', 'BlenderExtract.py');
 
 
 ipcMain.handle('BlenderExtract', async (event, arg: Object) => {
   return new Promise(function (resolve, reject) {
-    let outputData:string = "";
+    let outputData: string = "";
     const spawn = require('child_process').spawn;
     const scriptExecution = spawn("blender", ['-b', arg['blendFile'], '--python', blenderExtractScriptsPath]);
     scriptExecution.stdout.setEncoding('utf8');
     scriptExecution.stderr.setEncoding('utf8');
 
-    scriptExecution.stdout.on('data', (stdout:any) => {
+    scriptExecution.stdout.on('data', (stdout: any) => {
       outputData = outputData + stdout.toString();
     });
 
-    scriptExecution.stderr.on('data', (stderr:any) => {
+    scriptExecution.stderr.on('data', (stderr: any) => {
       reject(stderr.toString());
     });
+    scriptExecution.on('error', function (error) {
+      reject(error.toString());
+    });
 
-    scriptExecution.on('exit', (code:any) => {
+    scriptExecution.on('exit', (code: any) => {
       try {
         const regexpContent = /---blenderextract---(?<jsonData>(.|\n)*)---blenderextract---/;
         const match = outputData.match(regexpContent);
@@ -129,11 +162,12 @@ ipcMain.handle('SavePreview', async (event, arg: Object) => {
 });
 
 let renderProcesses = [];
-ipcMain.handle('Render', (event, arg: Object) => {
-  console.log(arg['binary'], arg['args']);
+ipcMain.handle('Render', async (event, arg: Object) => {
+  let blenderBinary = dataManager.GetData().settings.blenderBinaryPath;
 
+  console.log(blenderBinary, arg['args']);
 
-  const child = spawn(arg['binary'], arg['args']);
+  const child = spawn(blenderBinary, arg['args']);
   child.stdout.setEncoding('utf8');
   child.stderr.setEncoding('utf8');
 
@@ -143,8 +177,14 @@ ipcMain.handle('Render', (event, arg: Object) => {
   child.stderr.on('data', function (data) {
     myCapacitorApp.getMainWindow().webContents.send('onRenderError', data.toString());
   });
+  child.on('error', function (error) {
+    myCapacitorApp.getMainWindow().webContents.send('onRenderError', error);
+  });
   child.on('close', function (code) {
     myCapacitorApp.getMainWindow().webContents.send('onRenderClose', code);
+  });
+  child.on('exit', function (code) {
+    myCapacitorApp.getMainWindow().webContents.send('onRenderExit', code);
   });
   renderProcesses.push(child);
 });
@@ -167,15 +207,15 @@ ipcMain.handle('StopRender', async (event, arg: Object) => {
   }
 });
 
-//@ts-ignore
-const store = new Store({blenderQueueSettings});
 
-ipcMain.handle('GetSettings', async (event, arg: Object) => {
-  return store.get(arg['settingName']);
+
+
+ipcMain.handle('GetData', async (event) => {
+  return dataManager.GetData();
 });
 
-ipcMain.handle('SaveSettings', async (event, arg: Object) => {
-  store.set(arg['settingName'], arg['value']);
+ipcMain.handle('SaveData', async (event, data: Object) => {
+  return dataManager.SaveData(data as BlenderQueueData)
 });
 
 

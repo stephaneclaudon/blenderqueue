@@ -17,8 +17,8 @@ contextBridge.exposeInMainWorld(
             "PauseRender",
             "ResumeRender",
             "SavePreview",
-            "GetSettings",
-            "SaveSettings"
+            "GetData",
+            "SaveData"
         ];
         if (validChannels.includes(channel)) {
             return ipcRenderer.invoke(channel, data);
@@ -27,5 +27,6 @@ contextBridge.exposeInMainWorld(
     onRenderUpdate: (callback) => ipcRenderer.on('onRenderUpdate', callback),
     onRenderError: (callback) => ipcRenderer.on('onRenderError', callback),
     onRenderClose: (callback) => ipcRenderer.on('onRenderClose', callback),
+    onRenderExit: (callback) => ipcRenderer.on('onRenderExit', callback),
 }
 );

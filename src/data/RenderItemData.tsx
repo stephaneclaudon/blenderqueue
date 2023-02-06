@@ -1,7 +1,7 @@
 import { BlenderExtractData, BlenderExtractSceneData } from "./BlenderExtractData";
-import { GetBlenderFileInfo } from '../services/services';
 import { publish } from "../events/events";
 import {v4 as uuidv4} from 'uuid';
+import * as Services from "../services/services";
 
 export class RenderItemData {
   public static STATUS_PENDING = 'pending';
@@ -43,7 +43,7 @@ export class RenderItemData {
 
   private getBlenderFileInfo(onSuccess: Function, onError: Function) {
     this.initializing = true;
-    GetBlenderFileInfo(this.blendFilePath)
+    Services.GetBlenderFileInfo(this.blendFilePath)
       .then((dataObject: BlenderExtractData) => {
         this.blendFileData = dataObject;
         this.scene = this.blendFileData.scenes[0].name;
