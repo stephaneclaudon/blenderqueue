@@ -85,7 +85,7 @@ const Settings: React.FC<SettingsProps> = (props) => {
                 <IonItem>
                     <IonLabel position="stacked">Blender path</IonLabel>
                     <IonInput ref={input} type="text" placeholder="Enter path to Blender's executable file" value={appSettings.settings.blenderBinaryPath} onIonChange={onExePathChange} />
-                    <IonButton onClick={() => blenderExeInputFile.current?.click()} slot="end">Open</IonButton>
+                    <IonButton onClick={() => blenderExeInputFile.current?.click()} slot="end">Browse</IonButton>
                     <input onChange={onBlenderExeChange} ref={blenderExeInputFile} id="blender-path-input" type="file" placeholder=""></input>
                 </IonItem>
             </IonContent>

@@ -18,7 +18,8 @@ for scene in bpy.data.scenes:
         "filepath": bpy.data.scenes[scene.name].render.filepath,
         "file_format": bpy.data.scenes[scene.name].render.image_settings.file_format,
         "color": bpy.data.scenes[scene.name].render.image_settings.color_mode,
-        "film_transparent": bpy.data.scenes[scene.name].render.film_transparent
+        "film_transparent": bpy.data.scenes[scene.name].render.film_transparent,
+        "engine": bpy.data.scenes[scene.name].render.engine
         
     }
     data.scenes.append(sceneData)

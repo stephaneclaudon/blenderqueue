@@ -4,6 +4,11 @@
 
 #open-settings {
     cursor: pointer;
+    padding: 0 0.5em;
+}
+#open-settings.disabled {
+    pointer-events: none;
+    opacity: 0.5;
 }
 #open-settings:hover {
     transform: scale(1.08);
@@ -20,6 +25,7 @@
 
 #queue {
     height: 60%;
+    overflow-y: scroll;
 }
 
 #dropFilesOverlay {

@@ -9,6 +9,7 @@ export class BlenderExtractSceneData {
     public file_format: string = "";
     public color: string = "";
     public film_transparent: boolean = false;
+    public engine: string = "";
 }
 
 export class BlenderExtractData {

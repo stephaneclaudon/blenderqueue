@@ -3,6 +3,7 @@ import { IonCol, IonGrid, IonRow, IonProgressBar, IonLabel, IonSegment, IonSegme
 
 import './InfosContainer.css';
 import { RenderJob } from '../../services/services';
+import * as Utils from '../../utils/utils';
 
 interface InfosContainerProps {
     renderJob: RenderJob;
@@ -31,14 +32,23 @@ const InfosContainer: React.FC<InfosContainerProps> = (props) => {
     };
 
     const getProgressString = () => {
-        return props.renderJob.frame.toString() + '/' + (props.renderJob.renderItem.endFrame - props.renderJob.renderItem.startFrame + 1);
+        return props.renderJob.frame.toString()
+            + ' of ' +
+            (props.renderJob.renderItem.endFrame - props.renderJob.renderItem.startFrame + 1)
+            + ' ('
+            + getProgressPercent()
+            + ')';
     };
 
     const getProgress = () => {
         return props.renderJob.frame / (props.renderJob.renderItem.endFrame - props.renderJob.renderItem.startFrame + 1);
     };
 
-    
+    const getBuffer = () => {
+        return getProgress() + (1 / (props.renderJob.renderItem.endFrame - props.renderJob.renderItem.startFrame + 1));
+    };
+
+
     const logDiv = React.useRef<HTMLDivElement>(null);
     React.useEffect(() => {
         if (logDiv.current) {
@@ -56,12 +66,15 @@ const InfosContainer: React.FC<InfosContainerProps> = (props) => {
         };
     }, []);
 
+    console.log(getBuffer());
+
+
 
     return (
         <>
             <div id='InfosContainer' >
 
-                <IonSegment value={segment} onIonChange={(e) => handleSegmentChange(e)} >
+                <IonSegment className="ion-justify-content-start" value={segment} onIonChange={(e) => handleSegmentChange(e)} >
                     <IonSegmentButton value='progress'>
                         <IonLabel>Progress</IonLabel>
                     </IonSegmentButton>
@@ -73,45 +86,43 @@ const InfosContainer: React.FC<InfosContainerProps> = (props) => {
                     <div id='progress'>
 
                         <IonGrid>
-
                             <IonRow>
-                                
-                            </IonRow>
+                                <IonCol size="9" class="ion-align-items-start">
+                                    <IonGrid className='progress-info'>
+                                        <IonRow>
+                                            Rendering {props.renderJob.renderItem.blendFileName} ({props.renderJob.renderItem.sceneName})
+                                        </IonRow>
 
+                                        <IonRow>
+                                            <IonProgressBar buffer={getBuffer()} value={getProgress()} ></IonProgressBar>
+                                        </IonRow>
 
+                                        <IonRow className="progress-values">
+                                            <IonCol size="1" class="ion-justify-content-start">{props.renderJob.renderItem.startFrame}</IonCol>
+                                            <IonCol size="10">{getProgressString()}</IonCol>
+                                            <IonCol size="1" class="ion-justify-content-end">{props.renderJob.renderItem.endFrame}</IonCol>
+                                        </IonRow>
 
+                                        <IonRow><span className="label">Elapsed :</span><span className="important-value">{timeFormat(props.renderJob.elapsedTime)}</span></IonRow>
+                                        <IonRow><span className="label">Last frame :</span><span className="important-value">{timeFormat(props.renderJob.lastFrameTime)}</span></IonRow>
+                                        <IonRow><span className="label">Remaining :</span><span className="important-value">{timeFormat(props.renderJob.remainingTime)}</span></IonRow>
+                                    
+                                        <IonRow className="output-line">{Utils.stripString(props.renderJob.outputStringLastLine, 135)}</IonRow>
 
-                            <IonRow>
-                                <IonCol size="11">
-                                    <IonProgressBar value={getProgress()} ></IonProgressBar>
-                                </IonCol>
-                                <IonCol size="1">
-                                    {getProgressPercent()}
-                                </IonCol>
-                            </IonRow>
-                            <IonRow >
-                                <IonCol size="1" class="ion-justify-content-start">{props.renderJob.renderItem.startFrame}</IonCol>
-                                <IonCol size="9">{getProgressString()}</IonCol>
-                                <IonCol size="1" class="ion-justify-content-end">{props.renderJob.renderItem.endFrame}</IonCol>
-                            </IonRow>
-
-
-                            <IonRow>
-                                <IonCol size="4" class="ion-justify-content-start ion-text-left">
-                                    <IonGrid>
-                                        <IonRow><span>Elapsed :</span>{timeFormat(props.renderJob.elapsedTime)}</IonRow>
-                                        <IonRow><span>Remaining :</span>{timeFormat(props.renderJob.remainingTime)}</IonRow>
-                                        <IonRow><span>Last frame :</span>{timeFormat(props.renderJob.lastFrameTime)}</IonRow>
+                                    
                                     </IonGrid>
                                 </IonCol>
 
-                                <IonCol size="4">
-                                    <img src={props.renderJob.lastFrameFilePath} alt="Last frame preview" />
-                                </IonCol>
-                                <IonCol size="4">
-
+                                <IonCol size="3">
+                                    <img src={
+                                        (props.renderJob.lastFrameFilePath !== '')
+                                            ? props.renderJob.lastFrameFilePath
+                                            : '/assets/img/default-preview.jpg'
+                                    }
+                                        alt="Last frame preview" />
                                 </IonCol>
                             </IonRow>
+
                         </IonGrid>
                     </div>
                     :

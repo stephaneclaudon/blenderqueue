@@ -18,7 +18,8 @@ contextBridge.exposeInMainWorld(
             "ResumeRender",
             "SavePreview",
             "GetData",
-            "SaveData"
+            "SaveData",
+            "ShowItemInFolder"
         ];
         if (validChannels.includes(channel)) {
             return ipcRenderer.invoke(channel, data);

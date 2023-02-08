@@ -57,7 +57,7 @@ export const GetBlenderFileInfo = async (blendFilePath: string) => {
                 });
         } catch (error) {
             setTimeout(() => {
-                let json: any = JSON.parse('{"scenes":[{"name": "Scene", "start": 1, "end": 250, "resolution_x": 1920, "resolution_y": 1080, "filepath": "/Volumes/DATA/RESSOURCES/_BLENDER SCRIPTS/BlednerExtract/", "file_format": "PNG", "color": "RGBA", "film_transparent": true}, {"name": "Scene.001--Eevvee", "start": 40, "end": 250, "resolution_x": 1920, "resolution_y": 1080, "filepath": "/tmp/", "file_format": "PNG", "color": "RGBA", "film_transparent": false}]}');
+                let json: any = JSON.parse('{"scenes":[{"name": "Scene", "start": 1, "end": 250, "resolution_x": 1920, "resolution_y": 1080, "filepath": "/Volumes/DATA/RESSOURCES/_BLENDER SCRIPTS/BlednerExtract/", "file_format": "PNG", "color": "RGBA", "film_transparent": true, "engine": "CYCLES"}, {"name": "Scene.001--Eevvee", "start": 40, "end": 250, "resolution_x": 1920, "resolution_y": 1080, "filepath": "/tmp/", "file_format": "PNG", "color": "RGBA", "film_transparent": false, "engine": "BLENDER_EEVEE"}]}');
                 let data: BlenderExtractData = Object.assign(new BlenderExtractData(), json);
                 resolve(data);
                 //reject('OUPS');
@@ -76,6 +76,7 @@ export class RenderJob {
     public onClose: (code: number) => void = () => { };
 
     public outputString: string = "";
+    public outputStringLastLine: string = "";
 
     public frame: number = 0;
 
@@ -148,7 +149,7 @@ export class RenderJob {
                             this.renderItem.status = RenderItemData.STATUS_DONE;
                             this.onRenderClose(1);
                             return;
-                        } else {
+                        } else if (!this.paused) {
                             this.onRenderError("Stoped by user");
                             return;
                         }
@@ -207,6 +208,7 @@ export class RenderJob {
     private parseLine(line: string) {
         try {
             this.outputString += (line + '\r\n');
+            this.outputStringLastLine = line;
 
             let regex;
             let matches;
@@ -259,4 +261,22 @@ export class RenderJob {
         }
 
     }
+} 
+
+export const OpenFolder = (path:string) => {
+    return new Promise(function (resolve, reject) {
+        //If electron not started, return fake data
+        try {
+            //@ts-ignore
+            window.electronAPI.invoke(
+                'ShowItemInFolder', path).then(function (res: any) {
+                    resolve(res);
+                }).catch(function (err: any) {
+                    reject(err);
+                });
+        } catch (error) {
+            console.warn('OpenFolder(), electron not started, can\'t open folder');
+            resolve({});
+        }
+    });
 }

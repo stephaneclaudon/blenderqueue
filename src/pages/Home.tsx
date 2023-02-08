@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonList, IonProgressBar, IonButton, IonIcon, IonGrid, IonRow, IonCol, IonImg, useIonAlert, IonModal } from '@ionic/react';
+import React, { useEffect, useState } from 'react';
+import { IonContent, IonHeader, IonPage, IonToolbar, IonList, IonButton, IonIcon, IonGrid, IonRow, IonCol, IonImg, useIonAlert } from '@ionic/react';
 import RenderContainer from '../components/RenderContainer';
 import InfosContainer from '../components/Infos/InfosContainer';
 import { RenderItemData } from '../data/RenderItemData';
@@ -164,7 +164,8 @@ const Home: React.FC = () => {
 
   const deleteSelectedItems = () => {
     for (let index = 0; index < selectedRenderItems.length; index++) {
-      renderItems.splice(selectedRenderItems[index], 1);
+      if (!renderItems[selectedRenderItems[index]].isRendering)
+        renderItems.splice(selectedRenderItems[index], 1);
     }
     setRenderItems([...renderItems]);
   };
@@ -254,16 +255,10 @@ const Home: React.FC = () => {
               <IonCol size="1"><IonImg src="/assets/img/blender_logo_no_socket_white.png"></IonImg></IonCol>
 
               <IonCol size="11" class="ion-justify-content-end">
-                <IonCol size="1">
 
-                  {!(currentRenderJob && currentRenderJob.running) &&
-                    <IonIcon id="open-settings" size="large" icon={cog}></IonIcon>
-                  }
-                  <Settings onSettingsUpdated={onSettingsUpdated}></Settings>
+                <IonIcon id="open-settings" size="large" icon={cog} className={(currentRenderJob && currentRenderJob.running)?'disabled':''}></IonIcon>
+                <Settings onSettingsUpdated={onSettingsUpdated}></Settings>
 
-
-
-                </IonCol>
 
                 {(currentRenderJob && currentRenderJob.running && !currentRenderJob.paused) &&
                   <IonButton onClick={() => {

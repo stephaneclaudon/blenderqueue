@@ -1,6 +1,6 @@
 import type { CapacitorElectronConfig } from '@capacitor-community/electron';
 import { getCapacitorElectronConfig, setupElectronDeepLinking } from '@capacitor-community/electron';
-import type { MenuItemConstructorOptions } from 'electron';
+import { MenuItemConstructorOptions, shell } from 'electron';
 import { app, MenuItem, ipcMain } from 'electron';
 import { exec, execFile, fork, spawn } from "child_process";
 
@@ -209,6 +209,12 @@ ipcMain.handle('StopRender', async (event, arg: Object) => {
 
 
 
+
+ipcMain.handle('ShowItemInFolder', async (event, filepath:string) => {
+  console.log("Opening folder", filepath);
+  
+  return shell.showItemInFolder(filepath);
+});
 
 ipcMain.handle('GetData', async (event) => {
   return dataManager.GetData();
