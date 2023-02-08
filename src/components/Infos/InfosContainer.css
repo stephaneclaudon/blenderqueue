@@ -66,4 +66,5 @@
     height: inherit;
     flex-grow: 2;
     white-space: pre-wrap;
+    padding: 1em;
 }

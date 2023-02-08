@@ -41,7 +41,7 @@ const InfosContainer: React.FC<InfosContainerProps> = (props) => {
     };
 
     const getProgress = () => {
-        return props.renderJob.frame / (props.renderJob.renderItem.endFrame - props.renderJob.renderItem.startFrame + 1);
+        return (props.renderJob.frame - props.renderJob.renderItem.startFrame) / (props.renderJob.renderItem.endFrame - props.renderJob.renderItem.startFrame + 1);
     };
 
     const getBuffer = () => {
@@ -59,16 +59,12 @@ const InfosContainer: React.FC<InfosContainerProps> = (props) => {
     useEffect(() => {
         const interval = setInterval(() => {
             setTime(new Date());
-        }, 1000);
+        }, 200);
 
         return () => {
             clearInterval(interval)
         };
     }, []);
-
-    console.log(getBuffer());
-
-
 
     return (
         <>
@@ -107,7 +103,7 @@ const InfosContainer: React.FC<InfosContainerProps> = (props) => {
                                         <IonRow><span className="label">Last frame :</span><span className="important-value">{timeFormat(props.renderJob.lastFrameTime)}</span></IonRow>
                                         <IonRow><span className="label">Remaining :</span><span className="important-value">{timeFormat(props.renderJob.remainingTime)}</span></IonRow>
                                     
-                                        <IonRow className="output-line">{Utils.stripString(props.renderJob.outputStringLastLine, 135)}</IonRow>
+                                        <IonRow className="output-line">{Utils.stripString(props.renderJob.outputStringLastLine, 100)}</IonRow>
 
                                     
                                     </IonGrid>
