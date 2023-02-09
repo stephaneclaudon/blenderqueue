@@ -1,6 +1,6 @@
 import { BlenderExtractData, BlenderExtractSceneData } from "./BlenderExtractData";
 import { publish } from "../events/events";
-import {v4 as uuidv4} from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 import * as Services from "../services/services";
 
 export class RenderItemData {
@@ -9,11 +9,11 @@ export class RenderItemData {
   public static STATUS_PAUSED = 'paused';
   public static STATUS_DONE = 'done';
   public static STATUS_ERROR = 'error';
+  public static STATUS_INITIALIZING = 'initializing';
 
   public blendFileData: BlenderExtractData = new BlenderExtractData();
   public blendFilePath: string = "";
   public blendFileName: string = "";
-  public initializing: boolean = true;
   public enabled: boolean = true;
   public sceneName: string = '';
   public sceneData: BlenderExtractSceneData = new BlenderExtractSceneData();
@@ -22,6 +22,8 @@ export class RenderItemData {
   public status: string = RenderItemData.STATUS_PENDING;
   public commandArgs: Array<string> = [];
   public uuid: string = "";
+  public selected: boolean = false;
+  public expanded: boolean = false;
 
   constructor() {
     this.resetUuid();
@@ -31,25 +33,25 @@ export class RenderItemData {
     this.uuid = uuidv4();
   }
 
-  public init(blendFile: File, onSuccess: Function, onError: Function=()=>{}) {
+  public init(blendFile: File, onSuccess: Function, onError: Function = () => { }) {
     this.blendFileName = blendFile.name;
     //@ts-ignore
     this.blendFilePath = blendFile.path;
     this.getBlenderFileInfo(onSuccess, onError);
   }
 
-  public reset(onSuccess: Function, onError: Function=()=>{}) {
+  public reset(onSuccess: Function, onError: Function = () => { }) {
     this.getBlenderFileInfo(onSuccess, onError);
   }
 
   private getBlenderFileInfo(onSuccess: Function, onError: Function) {
-    this.initializing = true;
+    this.status = RenderItemData.STATUS_INITIALIZING;
     Services.GetBlenderFileInfo(this.blendFilePath)
       .then((dataObject: BlenderExtractData) => {
         this.blendFileData = dataObject;
         this.scene = this.blendFileData.scenes[0].name;
         this.status = RenderItemData.STATUS_PENDING;
-        if(onSuccess)
+        if (onSuccess)
           onSuccess();
       })
       .catch((error: any) => {
@@ -59,11 +61,9 @@ export class RenderItemData {
           subHeader: 'Couldn\'t retrieve scenes from ' + this.blendFileName,
           message: error
         });
-        if(onError)
+        if (onError)
           onError();
-      }).finally(() => {
-        this.initializing = false;
-      });
+      })
   }
 
   public selectScene(sceneName: string) {
@@ -81,8 +81,13 @@ export class RenderItemData {
     return this.sceneName;
   }
 
+
   public get isReady() {
-    return this.status === RenderItemData.STATUS_PENDING && this.enabled;
+    return this.enabled && this.isPending && !this.isInitializing;
+  }
+
+  public get isInitializing() {
+    return this.status === RenderItemData.STATUS_INITIALIZING;
   }
 
   public get isPending() {

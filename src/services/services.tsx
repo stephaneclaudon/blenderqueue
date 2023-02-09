@@ -150,7 +150,9 @@ export class RenderJob {
                             this.onRenderClose(1);
                             return;
                         } else if (!this.paused) {
-                            this.onRenderError("Stoped by user");
+                            console.log("STOPPP");
+                            
+                            this.onRenderClose(1);
                             return;
                         }
                         setTimeout(interval, 5);

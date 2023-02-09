@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { IonContent, IonHeader, IonPage, IonToolbar, IonList, IonButton, IonIcon, IonGrid, IonRow, IonCol, IonImg, useIonAlert } from '@ionic/react';
+import { IonContent, IonHeader, IonPage, IonToolbar, IonList, IonButton, IonIcon, IonGrid, IonRow, IonCol, IonImg, useIonAlert, IonReorderGroup, ItemReorderEventDetail, IonReorder, IonItem } from '@ionic/react';
 import RenderContainer from '../components/RenderContainer';
 import InfosContainer from '../components/Infos/InfosContainer';
 import { RenderItemData } from '../data/RenderItemData';
@@ -15,14 +15,13 @@ import Settings from '../components/Settings/Settings';
 
 
 let dragCounter = 0;
+let canRender: boolean = false;
 
 const Home: React.FC = () => {
 
   const [dragging, setDragging] = useState(false);
   const [renderItems, setRenderItems] = useState(new Array<RenderItemData>());
   const [currentRenderId, setCurrentRenderId] = useState(-1);
-  const [selectedRenderItems, setSelectedRenderItems] = useState<Array<number>>([]);
-  const [canRender, setCanRender] = useState(false);
   const [paused, setPaused] = useState(false);
   const [stoped, setStoped] = useState(false);
   const [currentRenderJob, setCurrentRenderJob] = useState<RenderJob>();
@@ -30,6 +29,11 @@ const Home: React.FC = () => {
 
   const onRenderItemChange = (item: RenderItemData) => {
     item.updateCommand();
+    setRenderItems([...renderItems]);
+  };
+
+  const onRenderItemExpand = (item: RenderItemData) => {
+    item.expanded = !item.expanded;
     setRenderItems([...renderItems]);
   };
 
@@ -42,14 +46,11 @@ const Home: React.FC = () => {
     onRenderItemChange(item);
   };
 
+  console.log("reload");
+
   const onRenderItemDelete = (id: number) => {
-    setRenderItems(
-      [
-        ...renderItems.filter((item, index) =>
-          index !== id
-        )
-      ]
-    );
+    renderItems.splice(id, 1);
+    setRenderItems([...renderItems]);
   };
 
   const onDrop = (event: any) => {
@@ -66,7 +67,6 @@ const Home: React.FC = () => {
       renderItem.init(file, () => {
         onRenderItemChange(renderItem);
       }, () => {
-        //renderItemDelete(renderItem);
         onRenderItemChange(renderItem);
       });
       renderItems.push(renderItem);
@@ -82,7 +82,6 @@ const Home: React.FC = () => {
   const onDragOver = (event: any) => {
     event.preventDefault();
     event.stopPropagation();
-
   };
 
   const onDragEnter = (event: any) => {
@@ -98,8 +97,6 @@ const Home: React.FC = () => {
   };
 
   const startRender = (renderId: number) => {
-    setCanRender(false);
-
     let render: RenderJob = new RenderJob(renderItems[renderId]);
     render.onClose = onRenderClose;
     render.onError = onRenderClose;
@@ -126,58 +123,72 @@ const Home: React.FC = () => {
     });
     return found;
   }
+
   const getNextRenderableItemId = (startIndex: number): number => {
     let itemIndex = -1;
     renderItems.map((item: RenderItemData, key) => {
-      if (key > startIndex && item.enabled && !item.isDone && itemIndex < 0)
+      if (key > startIndex && item.enabled && item.isReady && itemIndex < 0)
         itemIndex = key;
     });
     return itemIndex;
   }
 
   const addSelectedItem = (index: number) => {
-    if (isHotkeyPressed(['meta']) || isHotkeyPressed(['control']))
-      setSelectedRenderItems([...selectedRenderItems, index]);
-    else if (isHotkeyPressed(['shift']) && selectedRenderItems.length > 0) {
-      let min = Math.min(index, selectedRenderItems[0]);
-      let max = Math.max(index, selectedRenderItems[selectedRenderItems.length - 1]);
-      let newArr = [];
+    if (isHotkeyPressed(['shift'])) {
+      let firstSelected = renderItems.findIndex((item: RenderItemData) => item.selected);
+      let lastSelected = renderItems.length - 1 - [...renderItems].reverse().findIndex((item: RenderItemData) => item.selected);
+
+      let min = Math.min(index, firstSelected);
+      let max = Math.max(index, lastSelected);
 
       for (let ind = min; ind < max + 1; ind++) {
-        newArr.push(ind);
+        renderItems[ind].selected = true;
       }
+    } else if (!(isHotkeyPressed(['meta']) || isHotkeyPressed(['control']))) {
+      renderItems.map((item: RenderItemData) => {
+        item.selected = false;
+      });
+    }
+    renderItems[index].selected = true;
 
-      setSelectedRenderItems(newArr);
-    } else
-      setSelectedRenderItems([index]);
+    setRenderItems([...renderItems]);
   };
 
   const duplicateSelectedItems = () => {
-    for (let index = 0; index < selectedRenderItems.length; index++) {
-      let clone: RenderItemData = new RenderItemData();
-      Object.assign(clone, renderItems[index]);
-      clone.resetUuid();
-      if (!clone.isPending)
-        refreshItem(clone);
-      renderItems.push(clone);
-    }
+    renderItems.map((item: RenderItemData, index: number) => {
+      if (item.selected) {
+        item.selected = false;
+        let clone: RenderItemData = new RenderItemData();
+        Object.assign(clone, item);
+        clone.selected = true;
+        clone.resetUuid();
+        if (!clone.isPending)
+          refreshItem(clone);
+        renderItems.push(clone);
+      }
+    });
+
     setRenderItems([...renderItems]);
   };
 
   const deleteSelectedItems = () => {
-    let newItems = renderItems.filter((item:RenderItemData, index:number) => {
-      return !selectedRenderItems.includes(index);
-    });
-    /*for (let index = 0; index < selectedRenderItems.length; index++) {
-      if (!renderItems[selectedRenderItems[index]].isRendering)
-        newItems.push(renderItems[selectedRenderItems[index]]);
-        renderItems.splice(selectedRenderItems[index], 1);
-    }*/
+    let newItems = renderItems.filter((item: RenderItemData) => (!item.selected || item.isRendering || item.isPaused));
     setRenderItems([...newItems]);
   };
 
+  const deselectItems = () => {
+    renderItems.map((item: RenderItemData, index: number) => {
+      item.selected = false;
+    });
+
+    setRenderItems([...renderItems]);
+  };
+
   const selectAllItems = () => {
-    setSelectedRenderItems([...renderItems.keys()]);
+    renderItems.map((item: RenderItemData, index: number) => {
+      item.selected = true;
+    });
+    setRenderItems([...renderItems]);
   };
 
   const onErrorAlert = (data: any) => {
@@ -189,19 +200,28 @@ const Home: React.FC = () => {
     });
   };
 
-  console.log(renderItems);
-  
+  const stopRender = () => {
+    currentRenderJob?.stopRender();
+    setStoped(true);
+  };
 
+  const onSettingsUpdated = () => {
+    console.log("onSettingsUpdated", GetData());
+  };
 
+  const  handleReorder = (event: CustomEvent<ItemReorderEventDetail>) => {
+    event.detail.complete(renderItems);
+    setRenderItems([...renderItems]);
+  }
 
 
   /* ------------------------- */
   /* -----    EFFECTS    ----- */
   /* ------------------------- */
 
-  useHotkeys('mod+d', () => duplicateSelectedItems(), { preventDefault: true }, [selectedRenderItems, renderItems]);
+  useHotkeys('mod+d', () => duplicateSelectedItems(), { preventDefault: true }, [renderItems]);
   useHotkeys('mod+a', () => selectAllItems(), { preventDefault: true }, [renderItems]);
-  useHotkeys(['delete', 'backspace'], () => deleteSelectedItems(), { preventDefault: true }, [selectedRenderItems, renderItems]);
+  useHotkeys(['delete', 'backspace'], () => deleteSelectedItems(), { preventDefault: true }, [renderItems]);
 
   useEffect(() => {
     if (currentRenderId > -1)
@@ -216,12 +236,6 @@ const Home: React.FC = () => {
       setCurrentRenderId(-1);
     }
   }, [stoped]);
-
-  useEffect(() => {
-    let renderAvailable = hasNextRenderableItem(currentRenderId);
-    setCanRender(renderAvailable && !(currentRenderJob && currentRenderJob.running));
-  }, [renderItems, currentRenderId]);
-
 
   useEffect(() => {
     subscribe('errorAlert', onErrorAlert);
@@ -243,12 +257,8 @@ const Home: React.FC = () => {
   }, [renderItems]);
 
 
-
-
-  const onSettingsUpdated = () => {
-    console.log("onSettingsUpdated", GetData());
-  };
-
+  let renderAvailable = hasNextRenderableItem(currentRenderId);
+  canRender = renderAvailable && !(currentRenderJob && currentRenderJob.running);
 
 
   return (
@@ -265,7 +275,7 @@ const Home: React.FC = () => {
 
               <IonCol size="11" class="ion-justify-content-end">
 
-                <IonIcon id="open-settings" size="large" icon={cog} className={(currentRenderJob && currentRenderJob.running)?'disabled':''}></IonIcon>
+                <IonIcon id="open-settings" size="large" icon={cog} className={(currentRenderJob && currentRenderJob.running) ? 'disabled' : ''}></IonIcon>
                 <Settings onSettingsUpdated={onSettingsUpdated}></Settings>
 
 
@@ -289,8 +299,7 @@ const Home: React.FC = () => {
                 }
                 {(currentRenderJob && currentRenderJob.running) &&
                   <IonButton onClick={() => {
-                    currentRenderJob.stopRender();
-                    setStoped(true);
+                    stopRender()
                   }} color="danger">
                     <IonIcon icon={stopSharp}></IonIcon>
                     Stop
@@ -312,37 +321,38 @@ const Home: React.FC = () => {
       </IonHeader>
       <IonContent fullscreen id="content">
 
-        <IonList id='queue' onClick={() => setSelectedRenderItems([])}>
-          {renderItems.map((renderItem: RenderItemData, index: number) =>
-            <RenderContainer
-              onSelect={() => addSelectedItem(index)}
-              onRefresh={() => refreshItem(renderItem)}
-              selected={selectedRenderItems.includes(index)}
-              data={renderItem}
-              key={index}
-              onDelete={
-                () => onRenderItemDelete(index)
-              }
-              onToggleChange={() => {
-                renderItem.enabled = !renderItem.enabled;
-                if (renderItem.enabled) renderItem.status = RenderItemData.STATUS_PENDING;
-                onRenderItemChange(renderItem);
-              }}
-              onSceneChange={(sceneName: string) => {
-                renderItem.scene = sceneName;
-                onRenderItemChange(renderItem);
-              }}
-              onStartFrameChange={(frame: number) => {
-                renderItem.startFrame = frame;
-                onRenderItemChange(renderItem);
-              }}
-              onEndFrameChange={(frame: number) => {
-                renderItem.endFrame = frame;
-                onRenderItemChange(renderItem);
-              }}
-              index={index}
-            />
-          )}
+        <IonList id='queue' onClick={() => deselectItems()}>
+          <IonReorderGroup key={'IonReorderGroup'} disabled={false} onIonItemReorder={handleReorder}>
+            {renderItems.map((renderItem: RenderItemData, index: number) =>
+                
+                  <RenderContainer
+                    onSelect={() => addSelectedItem(index)}
+                    onExpand={() => onRenderItemExpand(renderItem)}
+                    onRefresh={() => refreshItem(renderItem)}
+                    data={renderItem}
+                    key={index}
+                    onDelete={() => onRenderItemDelete(index)}
+                    onToggleChange={() => {
+                      renderItem.enabled = !renderItem.enabled;
+                      if (renderItem.enabled)
+                        renderItem.status = RenderItemData.STATUS_PENDING;
+                      onRenderItemChange(renderItem);
+                    }}
+                    onSceneChange={(sceneName: string) => {
+                      renderItem.scene = sceneName;
+                      onRenderItemChange(renderItem);
+                    }}
+                    onStartFrameChange={(frame: number) => {
+                      renderItem.startFrame = frame;
+                      onRenderItemChange(renderItem);
+                    }}
+                    onEndFrameChange={(frame: number) => {
+                      renderItem.endFrame = frame;
+                      onRenderItemChange(renderItem);
+                    }}
+                    index={index} />
+            )}
+          </IonReorderGroup>
         </IonList>
 
         {currentRenderJob && currentRenderJob.running &&

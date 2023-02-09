@@ -31,6 +31,10 @@
     overflow-y: scroll;
 }
 
+#queue > ion-reorder-group > ion-item {
+    border-bottom: solid 1px #444;
+}
+
 #dropFilesOverlay {
     position: absolute;
     width: 98%;
