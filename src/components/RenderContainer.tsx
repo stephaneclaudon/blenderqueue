@@ -18,7 +18,6 @@ export interface RenderContainerProps {
   onRefresh: Function;
   onSelect: Function;
   index: number;
-  paused: boolean;
   selected: boolean;
 }
 
@@ -47,29 +46,28 @@ const RenderContainer: React.FC<RenderContainerProps> = (props) => {
           <IonCol size="2" class="ion-justify-content-evenly">
             <IonIcon className={showDetails ? 'expand-icon opened' : 'expand-icon closed'} onClick={() => setShowDetails(!showDetails)} size="large" icon={chevronForward}></IonIcon>
 
-
-            {!(props.data.isDone || props.data.isRendering || props.data.hasFailed) &&
-              <IonToggle
-                color={props.selected ? 'light' : 'primary'}
-                checked={props.data.enabled}
-                onIonChange={(event) => props.onToggleChange(event.target.value)}
-              ></IonToggle>
-            }
-            {(props.data.hasFailed) &&
-              <IonIcon className='delete' onClick={() => props.onRefresh()} size="large" icon={refreshOutline}></IonIcon>
-            }
-
+              {(props.data.isPending) &&
+                <IonToggle
+                  color={props.selected ? 'light' : 'primary'}
+                  checked={props.data.enabled}
+                  onIonChange={(event) => props.onToggleChange(event.target.value)}
+                ></IonToggle>
+              }
+              {!(props.data.isPending) &&
+                <IonIcon className={(props.data.hasFailed || props.data.isDone)?'icon-button':'icon-button hidden'} onClick={() => props.onRefresh()} size="large" icon={refreshOutline}></IonIcon>
+              }
 
 
-            {(props.paused) && <IonIcon size="large" color="warning" icon={pause}></IonIcon>}
-            {(!props.paused && props.data.status === RenderItemData.STATUS_PENDING) && <IonIcon size="large" icon={timeOutline}></IonIcon>}
-            {(!props.paused && props.data.status === RenderItemData.STATUS_RENDERING) && <IonIcon className="renderingIcon" color="warning" size="large" icon={cogOutline}></IonIcon>}
-            {(!props.paused && props.data.status === RenderItemData.STATUS_ERROR) && <IonIcon color="danger" size="large" icon={alertCircleOutline}></IonIcon>}
-            {(!props.paused && props.data.status === RenderItemData.STATUS_DONE) && <IonIcon color="success" size="large" icon={checkmarkCircleOutline}></IonIcon>}
+
+            {(props.data.isPaused) && <IonIcon size="large" color="warning" icon={pause}></IonIcon>}
+            {(!props.data.isPaused && props.data.isPending) && <IonIcon size="large" icon={timeOutline}></IonIcon>}
+            {(!props.data.isPaused && props.data.isRendering) && <IonIcon className="renderingIcon" color="warning" size="large" icon={cogOutline}></IonIcon>}
+            {(!props.data.isPaused && props.data.hasFailed) && <IonIcon color="danger" size="large" icon={alertCircleOutline}></IonIcon>}
+            {(!props.data.isPaused && props.data.isDone) && <IonIcon color="success" size="large" icon={checkmarkCircleOutline}></IonIcon>}
 
 
           </IonCol>
-          
+
           <IonCol size="2" class="ion-justify-content-start file-name">
             <IonLabel>{props.data.blendFileName}</IonLabel>
           </IonCol>
@@ -106,19 +104,18 @@ const RenderContainer: React.FC<RenderContainerProps> = (props) => {
           </IonCol>
           <IonCol size="4" class="ion-justify-content-end">
             {!props.data.isRendering &&
-              <IonIcon className='delete' onClick={() => props.onDelete()} size="large" icon={trashOutline}></IonIcon>
+              <IonIcon className='icon-button' onClick={() => props.onDelete()} size="large" icon={trashOutline}></IonIcon>
             }
           </IonCol>
         </IonRow>
 
         {!props.data.initializing &&
           <IonRow className={showDetails ? 'info opened' : 'info closed'}>
-            <IonCol size='2'></IonCol>
             <IonCol size='1' class="ion-justify-content-start">{props.data.sceneData.engine}</IonCol>
-            <IonCol size='1' class="ion-justify-content-start">{props.data.sceneData.resolution_x}x{props.data.sceneData.resolution_y}px</IonCol>
+            <IonCol size='2' class="ion-justify-content-start">{props.data.sceneData.resolution_x}x{props.data.sceneData.resolution_y}px</IonCol>
             <IonCol size='1' class="ion-justify-content-start">{props.data.sceneData.file_format}</IonCol>
-            <IonCol size='1' class="ion-justify-content-start">{props.data.sceneData.film_transparent ? 'With alpha' : 'No alpha'}</IonCol>
-            <IonCol size='6' class="ion-justify-content-start">&nbsp;<a onClick={() => Services.OpenFolder(props.data.sceneData.filepath)} href="#">{Utils.strippedPath(props.data.sceneData.filepath)}</a></IonCol>
+            <IonCol size='1' class="ion-justify-content-start">{props.data.sceneData.film_transparent ? 'Alpha' : 'No alpha'}</IonCol>
+            <IonCol size='7' class="ion-justify-content-start">&nbsp;<a onClick={() => Services.OpenFolder(props.data.sceneData.filepath)} href="#">{Utils.strippedPath(props.data.sceneData.filepath)}</a></IonCol>
           </IonRow>
         }
 

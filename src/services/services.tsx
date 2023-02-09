@@ -191,11 +191,13 @@ export class RenderJob {
     }
     public pauseRender() {
         this.paused = true;
+        this.renderItem.status = RenderItemData.STATUS_PAUSED;
         //@ts-ignore
         try { window.electronAPI.invoke('PauseRender', {}); } catch { }
     }
     public resumeRender() {
         this.paused = false;
+        this.renderItem.status = RenderItemData.STATUS_RENDERING;
         //@ts-ignore
         try { window.electronAPI.invoke('ResumeRender', {}); } catch { }
     }

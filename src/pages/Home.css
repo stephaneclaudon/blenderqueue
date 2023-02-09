@@ -15,16 +15,19 @@
 }
 
 
-#content {
+#content::part(scroll){
     display: flex;
-    flex-direction: column;
+    justify-content: space-around;
+    flex-flow: column;
+    align-items: stretch;
 }
 
 #header {
 }
 
 #queue {
-    height: 60%;
+    /*height: 60%;*/
+    flex-grow: 1;
     overflow-y: scroll;
 }
 

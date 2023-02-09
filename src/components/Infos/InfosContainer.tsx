@@ -99,11 +99,14 @@ const InfosContainer: React.FC<InfosContainerProps> = (props) => {
                                             <IonCol size="1" class="ion-justify-content-end">{props.renderJob.renderItem.endFrame}</IonCol>
                                         </IonRow>
 
-                                        <IonRow><span className="label">Elapsed :</span><span className="important-value">{timeFormat(props.renderJob.elapsedTime)}</span></IonRow>
-                                        <IonRow><span className="label">Last frame :</span><span className="important-value">{timeFormat(props.renderJob.lastFrameTime)}</span></IonRow>
-                                        <IonRow><span className="label">Remaining :</span><span className="important-value">{timeFormat(props.renderJob.remainingTime)}</span></IonRow>
+                                        <IonRow className="progress-values">
+                                            <IonCol size="4" class="ion-justify-content-start ion-no-padding"><span className="label">Elapsed :</span><span className="important-value">{timeFormat(props.renderJob.elapsedTime)}</span></IonCol>
+                                            <IonCol size="4" class="ion-justify-content-start ion-no-padding"><span className="label">Last frame :</span><span className="important-value">{timeFormat(props.renderJob.lastFrameTime)}</span></IonCol>
+                                            <IonCol size="4" class="ion-justify-content-start ion-no-padding"><span className="label">Remaining :</span><span className="important-value">{timeFormat(props.renderJob.remainingTime)}</span></IonCol>
+                                        </IonRow>
+
                                     
-                                        <IonRow className="output-line">{Utils.stripString(props.renderJob.outputStringLastLine, 100)}</IonRow>
+                                        <IonRow className="output-line">{Utils.stripString(props.renderJob.outputStringLastLine, 145)}</IonRow>
 
                                     
                                     </IonGrid>

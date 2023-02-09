@@ -157,17 +157,23 @@ const Home: React.FC = () => {
       let clone: RenderItemData = new RenderItemData();
       Object.assign(clone, renderItems[index]);
       clone.resetUuid();
+      if (!clone.isPending)
+        refreshItem(clone);
       renderItems.push(clone);
     }
     setRenderItems([...renderItems]);
   };
 
   const deleteSelectedItems = () => {
-    for (let index = 0; index < selectedRenderItems.length; index++) {
+    let newItems = renderItems.filter((item:RenderItemData, index:number) => {
+      return !selectedRenderItems.includes(index);
+    });
+    /*for (let index = 0; index < selectedRenderItems.length; index++) {
       if (!renderItems[selectedRenderItems[index]].isRendering)
+        newItems.push(renderItems[selectedRenderItems[index]]);
         renderItems.splice(selectedRenderItems[index], 1);
-    }
-    setRenderItems([...renderItems]);
+    }*/
+    setRenderItems([...newItems]);
   };
 
   const selectAllItems = () => {
@@ -182,6 +188,9 @@ const Home: React.FC = () => {
       buttons: ['CLOSE'],
     });
   };
+
+  console.log(renderItems);
+  
 
 
 
@@ -309,7 +318,6 @@ const Home: React.FC = () => {
               onSelect={() => addSelectedItem(index)}
               onRefresh={() => refreshItem(renderItem)}
               selected={selectedRenderItems.includes(index)}
-              paused={paused}
               data={renderItem}
               key={index}
               onDelete={

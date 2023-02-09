@@ -6,6 +6,7 @@ import * as Services from "../services/services";
 export class RenderItemData {
   public static STATUS_PENDING = 'pending';
   public static STATUS_RENDERING = 'rendering';
+  public static STATUS_PAUSED = 'paused';
   public static STATUS_DONE = 'done';
   public static STATUS_ERROR = 'error';
 
@@ -84,8 +85,16 @@ export class RenderItemData {
     return this.status === RenderItemData.STATUS_PENDING && this.enabled;
   }
 
+  public get isPending() {
+    return this.status === RenderItemData.STATUS_PENDING;
+  }
+
   public get isDone() {
     return this.status === RenderItemData.STATUS_DONE;
+  }
+
+  public get isPaused() {
+    return this.status === RenderItemData.STATUS_PAUSED;
   }
 
   public get hasFailed() {
