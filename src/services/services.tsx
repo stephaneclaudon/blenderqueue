@@ -68,10 +68,13 @@ export const GetBlenderFileInfo = async (blendFilePath: string) => {
 
 export class RenderJob {
 
+    private previewFormat: Array<string> = ['PNG', 'JPEG', 'JPEG2000'];
+    private canPreviewFile: boolean = false;
+
     private args: Array<string>;
 
     public onUpdate: () => void = () => { };
-    public onError: (data: any) => void = () => { };
+    public onError: (data: string) => void = () => { };
     public onExit: (data: any) => void = () => { };
     public onClose: (code: number) => void = () => { };
 
@@ -98,9 +101,13 @@ export class RenderJob {
 
 
     constructor(renderItem: RenderItemData) {
+        console.log("new RenderJob()");
+
+
         this.renderItem = renderItem;
         this.args = this.renderItem.commandArgs;
         this.frame = this.renderItem.startFrame;
+        this.canPreviewFile = this.previewFormat.includes(this.renderItem.sceneData.file_format);
     }
 
     public start() {
@@ -121,7 +128,7 @@ export class RenderJob {
             });
             //@ts-ignore
             window.electronAPI.onRenderError(
-                (event: any, error: any) => this.onRenderError(error)
+                (event: any, error: string) => this.onRenderError(error)
             );
             //@ts-ignore
             window.electronAPI.onRenderClose(
@@ -150,8 +157,7 @@ export class RenderJob {
                             this.onRenderClose(1);
                             return;
                         } else if (!this.paused) {
-                            console.log("STOPPP");
-                            
+                            console.log("STOP");
                             this.onRenderClose(1);
                             return;
                         }
@@ -166,7 +172,7 @@ export class RenderJob {
         this.running = true;
     }
 
-    public onRenderError(error: any) {
+    public onRenderError(error: string) {
         console.error("Render encountered an error ", error);
         this.stoped = true;
         this.running = false;
@@ -177,10 +183,9 @@ export class RenderJob {
 
     public onRenderClose(code: number) {
         if (!this.renderItem.hasFailed) {
-            console.log("Render closed ", code);
             this.renderItem.status = RenderItemData.STATUS_DONE;
-            this.onClose(code);
         }
+        this.onClose(code);
     }
 
     public stopRender() {
@@ -234,14 +239,16 @@ export class RenderJob {
                 this.totalSamples = parseInt(matches.groups.totalSamples);
             }
 
-            //Parsing last frame file path
-            regex = /Saved:\s\'(?<lastFrameFilePath>.*)\'/;
-            matches = line.match(regex);
-            if (matches && matches.groups) {
-                //@ts-ignore
-                window.electronAPI.invoke('SavePreview', { 'filePath': matches.groups.lastFrameFilePath }).then((previewFilePath: string) => {
-                    this.lastFrameFilePath = previewFilePath + '?' + Math.random().toString();
-                });
+            if (this.canPreviewFile) {
+                //Parsing last frame file path
+                regex = /Saved:\s\'(?<lastFrameFilePath>.*)\'/;
+                matches = line.match(regex);
+                if (matches && matches.groups) {
+                    //@ts-ignore
+                    window.electronAPI.invoke('SavePreview', { 'filePath': matches.groups.lastFrameFilePath }).then((previewFilePath: string) => {
+                        this.lastFrameFilePath = previewFilePath + '?' + Math.random().toString();
+                    });
+                }
             }
 
 
@@ -265,9 +272,9 @@ export class RenderJob {
         }
 
     }
-} 
+}
 
-export const OpenFolder = (path:string) => {
+export const OpenFolder = (path: string) => {
     return new Promise(function (resolve, reject) {
         //If electron not started, return fake data
         try {

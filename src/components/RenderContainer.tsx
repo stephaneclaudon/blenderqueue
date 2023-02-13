@@ -25,7 +25,6 @@ const debug: boolean = false;
 let framesAreValid: boolean = false;
 
 const RenderContainer: React.FC<RenderContainerProps> = (props) => {
-  //const [showDetails, setShowDetails] = useState(false);
 
   const firstRowElement = React.useRef<HTMLIonRowElement>(null);
   const secondRowElement = React.useRef<HTMLIonRowElement>(null);
@@ -39,13 +38,13 @@ const RenderContainer: React.FC<RenderContainerProps> = (props) => {
     }
   }
 
-  framesAreValid = props.data.endFrame > props.data.startFrame;
+  framesAreValid = props.data.endFrame >= props.data.startFrame;
 
 
   return (
     <>
       <IonItem
-        class="ion-no-padding">
+        class="ion-no-padding item-multiple-inputs">
         <IonGrid className={props.data.selected ? 'renderItem selected' : 'renderItem'}>
           <IonRow
             ref={firstRowElement}
@@ -54,7 +53,6 @@ const RenderContainer: React.FC<RenderContainerProps> = (props) => {
           >
             <IonCol size="2" class="ion-justify-content-evenly">
               <IonIcon className={props.data.expanded ? 'expand-icon opened' : 'expand-icon closed'} onClick={() => props.onExpand()} size="large" icon={chevronForward}></IonIcon>
-              {props.data.expanded ? 'expanded' : 'no'}
               {(props.data.isPending) &&
                 <IonToggle
                   color={props.data.selected ? 'light' : 'primary'}
@@ -122,7 +120,7 @@ const RenderContainer: React.FC<RenderContainerProps> = (props) => {
               </IonItem>
             </IonCol>
             <IonCol size="1" class="ion-justify-content-end">
-              {!props.data.isRendering &&
+              {(!props.data.isPaused && !props.data.isRendering) &&
                 <IonIcon className='icon-button' onClick={() => props.onDelete()} size="large" icon={trashOutline}></IonIcon>
               }
             </IonCol>
@@ -154,7 +152,7 @@ const RenderContainer: React.FC<RenderContainerProps> = (props) => {
             </IonRow>
           }
         </IonGrid>
-        <IonReorder slot="end"></IonReorder>
+        <IonReorder slot="end" ></IonReorder>
       </IonItem>
     </>
   );

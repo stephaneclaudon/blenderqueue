@@ -34,6 +34,9 @@
 #queue > ion-reorder-group > ion-item {
     border-bottom: solid 1px #444;
 }
+/*#queue > ion-reorder-group > ion-item.item-interactive-disabled, #queue > ion-reorder-group > ion-item.item-select-disabled {
+    pointer-events: auto !important;
+}*/
 
 #dropFilesOverlay {
     position: absolute;

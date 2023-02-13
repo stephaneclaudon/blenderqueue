@@ -90,7 +90,10 @@ const InfosContainer: React.FC<InfosContainerProps> = (props) => {
                                         </IonRow>
 
                                         <IonRow>
-                                            <IonProgressBar buffer={getBuffer()} value={getProgress()} ></IonProgressBar>
+                                            {(props.renderJob.renderItem.endFrame - props.renderJob.renderItem.startFrame > 1)
+                                                ?<IonProgressBar buffer={getBuffer()} value={getProgress()} ></IonProgressBar>
+                                                :<IonProgressBar type='indeterminate'></IonProgressBar>
+                                            }
                                         </IonRow>
 
                                         <IonRow className="progress-values">
@@ -105,10 +108,10 @@ const InfosContainer: React.FC<InfosContainerProps> = (props) => {
                                             <IonCol size="4" class="ion-justify-content-start ion-no-padding"><span className="label">Remaining :</span><span className="important-value">{timeFormat(props.renderJob.remainingTime)}</span></IonCol>
                                         </IonRow>
 
-                                    
+
                                         <IonRow className="output-line">{Utils.stripString(props.renderJob.outputStringLastLine, 145)}</IonRow>
 
-                                    
+
                                     </IonGrid>
                                 </IonCol>
 

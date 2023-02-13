@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { IonContent, IonHeader, IonPage, IonToolbar, IonList, IonButton, IonIcon, IonGrid, IonRow, IonCol, IonImg, useIonAlert, IonReorderGroup, ItemReorderEventDetail, IonReorder, IonItem } from '@ionic/react';
+import React, { useEffect, useRef, useState } from 'react';
+import { IonContent, IonHeader, IonPage, IonToolbar, IonList, IonButton, IonIcon, IonGrid, IonRow, IonCol, IonImg, useIonAlert, IonReorderGroup, ItemReorderEventDetail, IonReorder, IonItem, setupIonicReact } from '@ionic/react';
 import RenderContainer from '../components/RenderContainer';
 import InfosContainer from '../components/Infos/InfosContainer';
 import { RenderItemData } from '../data/RenderItemData';
@@ -18,6 +18,10 @@ let dragCounter = 0;
 let canRender: boolean = false;
 
 const Home: React.FC = () => {
+
+  const [init, setInit] = useState(true);
+
+  const openSettingsBtn = React.useRef<HTMLIonIconElement>(null);
 
   const [dragging, setDragging] = useState(false);
   const [renderItems, setRenderItems] = useState(new Array<RenderItemData>());
@@ -45,8 +49,6 @@ const Home: React.FC = () => {
     });
     onRenderItemChange(item);
   };
-
-  console.log("reload");
 
   const onRenderItemDelete = (id: number) => {
     renderItems.splice(id, 1);
@@ -99,19 +101,38 @@ const Home: React.FC = () => {
   const startRender = (renderId: number) => {
     let render: RenderJob = new RenderJob(renderItems[renderId]);
     render.onClose = onRenderClose;
-    render.onError = onRenderClose;
+    render.onError = onRenderError;
     render.start();
     setCurrentRenderJob(render);
   }
 
   const onRenderClose = (code: number) => {
-    if (hasNextRenderableItem(currentRenderId)) {
-      setCurrentRenderId(getNextRenderableItemId(currentRenderId));
-    }
-    else {
+    if (stoped) {
+      setStoped(false);
+      setPaused(false);
       setCurrentRenderJob(undefined);
       setCurrentRenderId(-1);
+    } else {
+
+      if (hasNextRenderableItem(currentRenderId)) {
+        setCurrentRenderId(getNextRenderableItemId(currentRenderId));
+      }
+      else {
+        setCurrentRenderJob(undefined);
+        setCurrentRenderId(-1);
+      }
     }
+    setRenderItems([...renderItems]);
+  };
+
+  const onRenderError = (error: string) => {
+    onRenderClose(0);
+    errorAlert({
+      header: 'Render Error',
+      subHeader: 'Blender renderer has failed',
+      message: error,
+      buttons: ['CLOSE']
+    });
   };
 
   let hasNextRenderableItem = (startIndex: number): boolean => {
@@ -200,18 +221,23 @@ const Home: React.FC = () => {
     });
   };
 
-  const stopRender = () => {
-    currentRenderJob?.stopRender();
-    setStoped(true);
-  };
-
   const onSettingsUpdated = () => {
     console.log("onSettingsUpdated", GetData());
   };
 
-  const  handleReorder = (event: CustomEvent<ItemReorderEventDetail>) => {
-    event.detail.complete(renderItems);
-    setRenderItems([...renderItems]);
+  const handleReorder = (event: CustomEvent<ItemReorderEventDetail>) => {
+    let newItems = event.detail.complete(renderItems);
+    console.log(newItems);
+    setRenderItems([...newItems]);
+  }
+  const onBlenderExeError = (event: any, str: string) => {
+    errorAlert({
+      header: 'Settings Error',
+      subHeader: 'Can\'t find Blender',
+      message: str,
+      buttons: ['CLOSE']
+    });
+    openSettingsBtn.current?.click();
   }
 
 
@@ -224,17 +250,24 @@ const Home: React.FC = () => {
   useHotkeys(['delete', 'backspace'], () => deleteSelectedItems(), { preventDefault: true }, [renderItems]);
 
   useEffect(() => {
+    if (init) {
+      //@ts-ignore
+      if (window.electronAPI) {
+        //@ts-ignore
+        window.electronAPI.blenderExecutablePathError(onBlenderExeError);
+      }
+      setInit(false);
+    }
+  }, [init]);
+
+  useEffect(() => {
     if (currentRenderId > -1)
       startRender(currentRenderId);
   }, [currentRenderId]);
 
   useEffect(() => {
-    if (stoped) {
-      setStoped(false);
-      setPaused(false);
-      setCurrentRenderJob(undefined);
-      setCurrentRenderId(-1);
-    }
+    if (stoped)
+      currentRenderJob?.stopRender();
   }, [stoped]);
 
   useEffect(() => {
@@ -275,7 +308,7 @@ const Home: React.FC = () => {
 
               <IonCol size="11" class="ion-justify-content-end">
 
-                <IonIcon id="open-settings" size="large" icon={cog} className={(currentRenderJob && currentRenderJob.running) ? 'disabled' : ''}></IonIcon>
+                <IonIcon ref={openSettingsBtn} id="open-settings" size="large" icon={cog} className={(currentRenderJob && currentRenderJob.running) ? 'disabled' : ''}></IonIcon>
                 <Settings onSettingsUpdated={onSettingsUpdated}></Settings>
 
 
@@ -299,7 +332,7 @@ const Home: React.FC = () => {
                 }
                 {(currentRenderJob && currentRenderJob.running) &&
                   <IonButton onClick={() => {
-                    stopRender()
+                    setStoped(true)
                   }} color="danger">
                     <IonIcon icon={stopSharp}></IonIcon>
                     Stop
@@ -322,35 +355,35 @@ const Home: React.FC = () => {
       <IonContent fullscreen id="content">
 
         <IonList id='queue' onClick={() => deselectItems()}>
-          <IonReorderGroup key={'IonReorderGroup'} disabled={false} onIonItemReorder={handleReorder}>
+          <IonReorderGroup key={'IonReorderGroup'} disabled={(currentRenderJob && currentRenderJob.running)} onIonItemReorder={handleReorder}>
             {renderItems.map((renderItem: RenderItemData, index: number) =>
-                
-                  <RenderContainer
-                    onSelect={() => addSelectedItem(index)}
-                    onExpand={() => onRenderItemExpand(renderItem)}
-                    onRefresh={() => refreshItem(renderItem)}
-                    data={renderItem}
-                    key={index}
-                    onDelete={() => onRenderItemDelete(index)}
-                    onToggleChange={() => {
-                      renderItem.enabled = !renderItem.enabled;
-                      if (renderItem.enabled)
-                        renderItem.status = RenderItemData.STATUS_PENDING;
-                      onRenderItemChange(renderItem);
-                    }}
-                    onSceneChange={(sceneName: string) => {
-                      renderItem.scene = sceneName;
-                      onRenderItemChange(renderItem);
-                    }}
-                    onStartFrameChange={(frame: number) => {
-                      renderItem.startFrame = frame;
-                      onRenderItemChange(renderItem);
-                    }}
-                    onEndFrameChange={(frame: number) => {
-                      renderItem.endFrame = frame;
-                      onRenderItemChange(renderItem);
-                    }}
-                    index={index} />
+
+              <RenderContainer
+                onSelect={() => addSelectedItem(index)}
+                onExpand={() => onRenderItemExpand(renderItem)}
+                onRefresh={() => refreshItem(renderItem)}
+                data={renderItem}
+                key={index}
+                onDelete={() => onRenderItemDelete(index)}
+                onToggleChange={() => {
+                  renderItem.enabled = !renderItem.enabled;
+                  if (renderItem.enabled)
+                    renderItem.status = RenderItemData.STATUS_PENDING;
+                  onRenderItemChange(renderItem);
+                }}
+                onSceneChange={(sceneName: string) => {
+                  renderItem.scene = sceneName;
+                  onRenderItemChange(renderItem);
+                }}
+                onStartFrameChange={(frame: number) => {
+                  renderItem.startFrame = frame;
+                  onRenderItemChange(renderItem);
+                }}
+                onEndFrameChange={(frame: number) => {
+                  renderItem.endFrame = frame;
+                  onRenderItemChange(renderItem);
+                }}
+                index={index} />
             )}
           </IonReorderGroup>
         </IonList>

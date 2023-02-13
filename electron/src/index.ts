@@ -85,11 +85,16 @@ app.on('activate', async function () {
 
 
 // Place all ipc or other electron api calls and custom functionality under this line
-
+let settingsError = "";
 let dataManager = new DataManager();
-dataManager.init().then((response:string) => {
+dataManager.init().then((response: string) => {
   console.log(response);
   console.log("Data inited, lauching app...");
+
+}).catch((message: string) => {
+  settingsError = message;
+  console.log(settingsError);
+}).finally(() => {
   // Run Application
   (async () => {
     // Wait for electron app to be ready.
@@ -102,9 +107,16 @@ dataManager.init().then((response:string) => {
     await myCapacitorApp.init();
     // Check for updates if we are in a packaged app.
     autoUpdater.checkForUpdatesAndNotify();
+
+
+    setTimeout(() => {
+      if (settingsError != "") {
+        console.log("blenderExecutablePathError...");
+        myCapacitorApp.getMainWindow().webContents.send('blenderExecutablePathError', settingsError);
+      }
+    }, 2000);
+
   })();
-}).catch(() => {
-  console.log("Error initing data...");
 });
 
 
@@ -178,7 +190,7 @@ ipcMain.handle('Render', async (event, arg: Object) => {
     myCapacitorApp.getMainWindow().webContents.send('onRenderError', data.toString());
   });
   child.on('error', function (error) {
-    myCapacitorApp.getMainWindow().webContents.send('onRenderError', error);
+    myCapacitorApp.getMainWindow().webContents.send('onRenderError', error.toString());
   });
   child.on('close', function (code) {
     myCapacitorApp.getMainWindow().webContents.send('onRenderClose', code);
@@ -210,9 +222,9 @@ ipcMain.handle('StopRender', async (event, arg: Object) => {
 
 
 
-ipcMain.handle('ShowItemInFolder', async (event, filepath:string) => {
+ipcMain.handle('ShowItemInFolder', async (event, filepath: string) => {
   console.log("Opening folder", filepath);
-  
+
   return shell.showItemInFolder(filepath);
 });
 

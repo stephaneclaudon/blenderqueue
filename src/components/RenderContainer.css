@@ -79,7 +79,7 @@ ion-col {
 
 .renderItem .icon-button {
   cursor: pointer;
-  padding: 0 1em;
+  padding: 0 0.45em;
 }
 
 .renderItem .icon-button.hidden {
@@ -133,11 +133,11 @@ ion-col>* {
 }
 
 .info.opened {
-  max-height: 60px;
+  display: auto;
 }
 
 .info.closed {
-  max-height: 0;
+  display: none;
 }
 
 .info>ion-col {

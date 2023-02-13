@@ -25,9 +25,22 @@ contextBridge.exposeInMainWorld(
             return ipcRenderer.invoke(channel, data);
         }
     },
-    onRenderUpdate: (callback) => ipcRenderer.on('onRenderUpdate', callback),
-    onRenderError: (callback) => ipcRenderer.on('onRenderError', callback),
-    onRenderClose: (callback) => ipcRenderer.on('onRenderClose', callback),
-    onRenderExit: (callback) => ipcRenderer.on('onRenderExit', callback),
+    onRenderUpdate: (callback) => { 
+        ipcRenderer.removeAllListeners('onRenderUpdate');
+        ipcRenderer.addListener('onRenderUpdate', callback)
+    },
+    onRenderError: (callback) => { 
+        ipcRenderer.removeAllListeners('onRenderError');
+        ipcRenderer.addListener('onRenderError', callback)
+    },
+    onRenderClose: (callback) => { 
+        ipcRenderer.removeAllListeners('onRenderClose');
+        ipcRenderer.addListener('onRenderClose', callback)
+    },
+    onRenderExit: (callback) => {
+        ipcRenderer.removeAllListeners('onRenderExit');
+        ipcRenderer.addListener('onRenderExit', callback)
+    },
+    blenderExecutablePathError: (callback) => ipcRenderer.on('blenderExecutablePathError', callback),
 }
 );
