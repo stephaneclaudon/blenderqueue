@@ -1,5 +1,4 @@
 import { BlenderExtractData, BlenderExtractSceneData } from "./BlenderExtractData";
-import { publish } from "../events/events";
 import { v4 as uuidv4 } from 'uuid';
 import * as Services from "../services/services";
 
@@ -56,13 +55,8 @@ export class RenderItemData {
       })
       .catch((error: any) => {
         this.status = RenderItemData.STATUS_ERROR;
-        publish('errorAlert', {
-          header: 'Error',
-          subHeader: 'Couldn\'t retrieve scenes from ' + this.blendFileName,
-          message: error
-        });
         if (onError)
-          onError();
+          onError('Couldn\'t retrieve scenes from ' + this.blendFileName);
       })
   }
 

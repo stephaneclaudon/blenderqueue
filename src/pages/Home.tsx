@@ -16,6 +16,7 @@ import DragDrop from '../components/DragDrop/DragDrop';
 
 
 let canRender: boolean = false;
+let renderJob = new RenderJob();
 
 const Home: React.FC = () => {
 
@@ -26,7 +27,6 @@ const Home: React.FC = () => {
   const [renderItems, setRenderItems] = useState(new Array<RenderItemData>());
   const [currentRenderId, setCurrentRenderId] = useState(-1);
   const [paused, setPaused] = useState(false);
-  const [currentRenderJob, setCurrentRenderJob] = useState<RenderJob>();
   const [errorAlert] = useIonAlert();
 
   const onFilesDroped = (files: FileList) => {
@@ -36,7 +36,13 @@ const Home: React.FC = () => {
       let renderItem: RenderItemData = new RenderItemData();
       renderItem.init(file, () => {
         onRenderItemChange(renderItem);
-      }, () => {
+      }, (error:string) => {
+        errorAlert({
+          header: 'Error',
+          subHeader: 'Get infos from blend file',
+          message: error,
+          buttons: ['CLOSE']
+        });
         onRenderItemChange(renderItem);
       });
       renderItems.push(renderItem);
@@ -60,7 +66,13 @@ const Home: React.FC = () => {
   const refreshItem = (item: RenderItemData) => {
     item.reset(() => {
       onRenderItemChange(item);
-    }, () => {
+    }, (error:string) => {
+      errorAlert({
+        header: 'Error',
+        subHeader: 'Get infos from blend file',
+        message: error,
+        buttons: ['CLOSE']
+      });
       onRenderItemChange(item);
     });
     onRenderItemChange(item);
@@ -73,27 +85,23 @@ const Home: React.FC = () => {
 
 
   const startRender = (renderId: number) => {
-    let render: RenderJob = new RenderJob(renderItems[renderId]);
-    render.onStop = onRenderStop;
-    render.onClose = onRenderClose;
-    render.onError = onRenderError;
-    render.start();
-    setCurrentRenderJob(render);
+    renderJob.init(renderItems[renderId]);
+    renderJob.start();
+    setRenderItems([...renderItems]);
   }
 
   const onRenderStop = () => {
     setPaused(false);
-    setCurrentRenderJob(undefined);
     setCurrentRenderId(-1);
     setRenderItems([...renderItems]);
   };
 
   const onRenderClose = (code: number) => {
+    renderJob = new RenderJob();
     if (hasNextRenderableItem(currentRenderId)) {
       setCurrentRenderId(getNextRenderableItemId(currentRenderId));
     }
     else {
-      setCurrentRenderJob(undefined);
       setCurrentRenderId(-1);
     }
     setRenderItems([...renderItems]);
@@ -186,15 +194,6 @@ const Home: React.FC = () => {
     setRenderItems([...renderItems]);
   };
 
-  const onErrorAlert = (data: any) => {
-    errorAlert({
-      header: data.detail.header,
-      subHeader: data.detail.subHeader,
-      message: data.detail.message,
-      buttons: ['CLOSE'],
-    });
-  };
-
   const onSettingsUpdated = () => {
     console.log("onSettingsUpdated", GetData());
   };
@@ -239,10 +238,12 @@ const Home: React.FC = () => {
       startRender(currentRenderId);
   }, [currentRenderId]);
 
+  renderJob.onStop = onRenderStop;
+  renderJob.onClose = onRenderClose;
+  renderJob.onError = onRenderError;
 
   let renderAvailable = hasNextRenderableItem(currentRenderId);
-  canRender = renderAvailable && !(currentRenderJob && currentRenderJob.running);
-
+  canRender = renderAvailable && !(renderJob && renderJob.running);
 
   return (
 
@@ -256,37 +257,37 @@ const Home: React.FC = () => {
 
               <IonCol size="11" class="ion-justify-content-end">
 
-                <IonIcon ref={openSettingsBtn} id="open-settings" size="large" icon={cog} className={(currentRenderJob && currentRenderJob.running) ? 'disabled' : ''}></IonIcon>
+                <IonIcon ref={openSettingsBtn} id="open-settings" size="large" icon={cog} className={(renderJob && renderJob.running) ? 'disabled' : ''}></IonIcon>
                 <Settings onSettingsUpdated={onSettingsUpdated}></Settings>
 
 
-                {(currentRenderJob && currentRenderJob.running && !currentRenderJob.paused) &&
+                {(renderJob && renderJob.running && !renderJob.paused) &&
                   <IonButton onClick={() => {
                     setPaused(true);
-                    currentRenderJob.pauseRender();
+                    renderJob.pauseRender();
                   }} color="primary">
                     <IonIcon icon={pause}></IonIcon>
                     Pause
                   </IonButton>
                 }
-                {(currentRenderJob && currentRenderJob.paused) &&
+                {(renderJob && renderJob.paused) &&
                   <IonButton onClick={() => {
                     setPaused(false);
-                    currentRenderJob.resumeRender();
+                    renderJob.resumeRender();
                   }} color="warning">
                     <IonIcon icon={play}></IonIcon>
                     Resume
                   </IonButton>
                 }
-                {(currentRenderJob && currentRenderJob.running) &&
+                {(renderJob && renderJob.running) &&
                   <IonButton onClick={() => {
-                    currentRenderJob?.stopRender()
+                    renderJob?.stopRender()
                   }} color="danger">
                     <IonIcon icon={stopSharp}></IonIcon>
                     Stop
                   </IonButton>
                 }
-                {!(currentRenderJob && currentRenderJob.running) &&
+                {!(renderJob && renderJob.running) &&
                   <IonButton disabled={!canRender} onClick={() => setCurrentRenderId(getNextRenderableItemId(currentRenderId))} color="primary">
                     <IonIcon icon={playOutline}></IonIcon>
                     Render
@@ -303,7 +304,7 @@ const Home: React.FC = () => {
       <IonContent fullscreen id="content">
         {(renderItems.length > 0)
           ? <IonList id='queue' onClick={() => deselectItems()}>
-            <IonReorderGroup key={'IonReorderGroup'} disabled={(currentRenderJob && currentRenderJob.running)} onIonItemReorder={handleReorder}>
+            <IonReorderGroup key={'IonReorderGroup'} disabled={(renderJob && renderJob.running)} onIonItemReorder={handleReorder}>
               {renderItems.map((renderItem: RenderItemData, index: number) =>
 
                 <RenderItem
@@ -335,12 +336,10 @@ const Home: React.FC = () => {
               )}
             </IonReorderGroup>
           </IonList>
-          : <div id="instructions">Drop Blender project files here, click "Render" to start rendering.</div>
+          : <div id="instructions"><div>Drop Blender project files here, click "Render" to start rendering.</div></div>
         }
 
-        {currentRenderJob && currentRenderJob.running &&
-          <InfosContainer renderJob={currentRenderJob} />
-        }
+        <InfosContainer renderJob={renderJob} />
       </IonContent>
     </IonPage >
   );

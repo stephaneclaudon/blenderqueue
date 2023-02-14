@@ -71,7 +71,7 @@ export class RenderJob {
     private previewFormat: Array<string> = ['PNG', 'JPEG', 'JPEG2000'];
     private canPreviewFile: boolean = false;
 
-    private args: Array<string>;
+    private args: Array<string> = [];
 
     public onUpdate: () => void = () => { };
     public onError: (data: string) => void = () => { };
@@ -104,10 +104,12 @@ export class RenderJob {
     public renderItem: RenderItemData;
 
 
-    constructor(renderItem: RenderItemData) {
+    constructor() {
         console.log("new RenderJob()");
+        this.renderItem = new RenderItemData();
+    }
 
-
+    public init(renderItem: RenderItemData) {
         this.renderItem = renderItem;
         this.args = this.renderItem.commandArgs;
         this.frame = this.renderItem.startFrame;
@@ -165,7 +167,7 @@ export class RenderJob {
                             this.onRenderClose(1);
                             return;
                         }
-                        setTimeout(interval, 500);
+                        setTimeout(interval, 5);
                     };
                     interval();
                 }
@@ -252,7 +254,7 @@ export class RenderJob {
 
                 this.currentFrameProgress = (this.currentFrameInitialRemainingTime - this.currentFrameRemainingTime) / this.currentFrameInitialRemainingTime;
             }
-            
+
 
             //Parsing current rendering frame evolution
             regex = /Fra:(?<frame>\d*).*Sample\s(?<currentSamples>\d*)\/(?<totalSamples>\d*)/;

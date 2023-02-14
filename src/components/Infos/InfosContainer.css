@@ -57,6 +57,10 @@
     text-align: left;
 }
 
+#InfosContainer.waiting ion-progress-bar.main-progress::part(track), #InfosContainer.waiting ion-progress-bar::part(progress) {
+    background: var(--ion-color-step-100);
+}
+
 #InfosContainer ion-progress-bar.main-progress {
     height: 1em;
 }
@@ -74,9 +78,6 @@
     animation: none;
 }
 
-#InfosContainer.paused .indeterminate-bar-secondary {
-    animation: none !important;
-}
 
 #InfosContainer #progress {
     flex-grow: 1;

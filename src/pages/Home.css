@@ -26,7 +26,6 @@
 }
 
 #queue {
-    /*height: 60%;*/
     flex-grow: 1;
     overflow-y: scroll;
 }
@@ -37,6 +36,13 @@
 
 #instructions {
     text-align: center;
+    display: flex;
+    flex-grow: 1;
+    align-items: center;
+    align-content: center;
+}
+#instructions > div {
+    width: 100%;
 }
 
 #dropFilesOverlay {

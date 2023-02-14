@@ -4,12 +4,16 @@ import { IonCol, IonGrid, IonRow, IonProgressBar, IonLabel, IonSegment, IonSegme
 import './InfosContainer.css';
 import { RenderJob } from '../../services/services';
 import * as Utils from '../../utils/utils';
+import { RenderItemData } from '../../data/RenderItemData';
 
 interface InfosContainerProps {
-    renderJob: RenderJob;
+    renderJob: RenderJob
 }
 
 const InfosContainer: React.FC<InfosContainerProps> = (props) => {
+
+
+    const logDiv = React.useRef<HTMLDivElement>(null);
     const [segment, setSegment] = useState('progress');
     const [time, setTime] = useState(new Date());
 
@@ -49,7 +53,6 @@ const InfosContainer: React.FC<InfosContainerProps> = (props) => {
     };
 
 
-    const logDiv = React.useRef<HTMLDivElement>(null);
     React.useEffect(() => {
         if (logDiv.current) {
             logDiv.current.scrollTop = logDiv.current.scrollHeight;
@@ -68,7 +71,7 @@ const InfosContainer: React.FC<InfosContainerProps> = (props) => {
 
     return (
         <>
-            <div id='InfosContainer' className={props.renderJob.paused?'paused':''} >
+            <div id='InfosContainer' className={props.renderJob.paused ? 'paused' : (!props.renderJob.running) ? 'waiting' : 'running'} >
 
                 <IonSegment className="ion-justify-content-start" value={segment} onIonChange={(e) => handleSegmentChange(e)} >
                     <IonSegmentButton value='progress'>
@@ -86,23 +89,33 @@ const InfosContainer: React.FC<InfosContainerProps> = (props) => {
                                 <IonCol size="9" class="ion-align-items-start">
                                     <IonGrid className='progress-info'>
                                         <IonRow>
-                                            Rendering {props.renderJob.renderItem.blendFileName} ({props.renderJob.renderItem.sceneName})
-                                        </IonRow>
-
-                                        <IonRow>
-                                            <IonProgressBar className='current-frame-progress' type={(props.renderJob.isFrameInitializing && !props.renderJob.paused)?'indeterminate':'determinate'} value={(props.renderJob.isFrameInitializing && props.renderJob.paused)?0.5:props.renderJob.currentFrameProgress} ></IonProgressBar>
-                                        </IonRow>
-
-                                        <IonRow>
-                                            {(props.renderJob.renderItem.endFrame - props.renderJob.renderItem.startFrame > 1)
-                                                ?<IonProgressBar className='main-progress' buffer={getBuffer()} value={getProgress()} ></IonProgressBar>
-                                                :<IonProgressBar className='main-progress' type='indeterminate'></IonProgressBar>
+                                            {props.renderJob.running
+                                                ? <span>Rendering {props.renderJob.renderItem.blendFileName} ({props.renderJob.renderItem.sceneName})</span>
+                                                : <span>&nbsp;</span>
                                             }
                                         </IonRow>
 
+                                        <IonRow> {props.renderJob.running
+                                            ? <IonProgressBar className='current-frame-progress' type={(props.renderJob.isFrameInitializing && !props.renderJob.paused) ? 'indeterminate' : 'determinate'} value={(props.renderJob.isFrameInitializing && props.renderJob.paused) ? 0.5 : props.renderJob.currentFrameProgress} ></IonProgressBar>
+                                            : <IonProgressBar className='current-frame-progress' value={1} ></IonProgressBar>
+                                        }
+                                        </IonRow>
+
+                                        {props.renderJob.running
+                                            ? <IonRow>
+                                                {((props.renderJob.renderItem.endFrame - props.renderJob.renderItem.startFrame > 1))
+                                                    ? <IonProgressBar className='main-progress' buffer={getBuffer()} value={getProgress()} ></IonProgressBar>
+                                                    : <IonProgressBar className='main-progress' type={(props.renderJob.isFrameInitializing && !props.renderJob.paused && props.renderJob.running) ? 'indeterminate' : 'determinate'} value={(props.renderJob.isFrameInitializing && props.renderJob.paused) ? 0.5 : props.renderJob.currentFrameProgress} ></IonProgressBar>
+                                                }
+                                            </IonRow>
+                                            : <IonRow>
+                                                <IonProgressBar className='main-progress' value={1} ></IonProgressBar>
+                                            </IonRow>
+                                        }
+
                                         <IonRow className="progress-values">
                                             <IonCol size="1" class="ion-justify-content-start">{props.renderJob.renderItem.startFrame}</IonCol>
-                                            <IonCol size="10">{getProgressString()}</IonCol>
+                                            <IonCol size="10">{props.renderJob.running && getProgressString()}</IonCol>
                                             <IonCol size="1" class="ion-justify-content-end">{props.renderJob.renderItem.endFrame}</IonCol>
                                         </IonRow>
 
