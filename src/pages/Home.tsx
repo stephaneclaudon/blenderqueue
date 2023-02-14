@@ -12,9 +12,9 @@ import { isHotkeyPressed } from 'react-hotkeys-hook'
 
 import './Home.css';
 import Settings from '../components/Settings/Settings';
+import DragDrop from '../components/DragDrop/DragDrop';
 
 
-let dragCounter = 0;
 let canRender: boolean = false;
 
 const Home: React.FC = () => {
@@ -23,12 +23,29 @@ const Home: React.FC = () => {
 
   const openSettingsBtn = React.useRef<HTMLIonIconElement>(null);
 
-  const [dragging, setDragging] = useState(false);
   const [renderItems, setRenderItems] = useState(new Array<RenderItemData>());
   const [currentRenderId, setCurrentRenderId] = useState(-1);
   const [paused, setPaused] = useState(false);
   const [currentRenderJob, setCurrentRenderJob] = useState<RenderJob>();
   const [errorAlert] = useIonAlert();
+
+  const onFilesDroped = (files: FileList) => {
+    for (let i = 0; i < files.length; i++) {
+      let file: File = files[i];
+      if (!file) return;
+      let renderItem: RenderItemData = new RenderItemData();
+      renderItem.init(file, () => {
+        onRenderItemChange(renderItem);
+      }, () => {
+        onRenderItemChange(renderItem);
+      });
+      renderItems.push(renderItem);
+    }
+
+    setRenderItems([
+      ...renderItems
+    ]);
+  };
 
   const onRenderItemChange = (item: RenderItemData) => {
     item.updateCommand();
@@ -54,53 +71,6 @@ const Home: React.FC = () => {
     setRenderItems([...renderItems]);
   };
 
-  const onDrop = (event: any) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    let dataTransfer = event.dataTransfer;
-    if (!dataTransfer || !dataTransfer.files) return;
-
-    for (let i = 0; i < dataTransfer.files.length; i++) {
-      let file: File = dataTransfer.files.item(i);
-      if (!file) return;
-      let renderItem: RenderItemData = new RenderItemData();
-      renderItem.init(file, () => {
-        onRenderItemChange(renderItem);
-      }, () => {
-        onRenderItemChange(renderItem);
-      });
-      renderItems.push(renderItem);
-    }
-
-    setRenderItems([
-      ...renderItems
-    ]);
-
-    dragCounter = 0;
-    setDragging(false);
-  };
-
-  const onDragOver = (event: any) => {
-    event.preventDefault();
-    event.stopPropagation();
-    console.log("onDragOver");
-  };
-
-  const onDragEnter = (event: any) => {
-    console.log("onDragEnter");
-    event.preventDefault();
-    dragCounter++;
-    setDragging(true);
-  };
-
-  const onDragLeave = (event: any) => {
-    console.log("onDragLeave");
-
-    dragCounter--;
-    if (dragCounter === 0)
-      setDragging(false);
-  };
 
   const startRender = (renderId: number) => {
     let render: RenderJob = new RenderJob(renderItems[renderId]);
@@ -269,25 +239,6 @@ const Home: React.FC = () => {
       startRender(currentRenderId);
   }, [currentRenderId]);
 
-  useEffect(() => {
-    subscribe('errorAlert', onErrorAlert);
-
-    document.addEventListener('drop', onDrop);
-    document.addEventListener('dragover', onDragOver);
-    document.addEventListener('dragenter', onDragEnter);
-    document.addEventListener('dragleave', onDragLeave);
-
-    return () => {
-      document.removeEventListener('drop', onDrop);
-      document.removeEventListener('dragover', onDragOver);
-      document.removeEventListener('dragenter', onDragEnter);
-      document.removeEventListener('dragleave', onDragLeave);
-
-      unsubscribe('errorAlert', onErrorAlert);
-    }
-
-  }, [renderItems]);
-
 
   let renderAvailable = hasNextRenderableItem(currentRenderId);
   canRender = renderAvailable && !(currentRenderJob && currentRenderJob.running);
@@ -296,9 +247,7 @@ const Home: React.FC = () => {
   return (
 
     <IonPage>
-      {
-        dragging && <div id="dropFilesOverlay"><span>Drop files here</span></div>
-      }
+      <DragDrop onDrop={onFilesDroped}></DragDrop>
       <IonHeader id="header">
         <IonToolbar>
           <IonGrid>
