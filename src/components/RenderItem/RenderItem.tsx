@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { timeOutline, trashOutline, alertCircleOutline, checkmarkCircleOutline, cogOutline, pauseOutline, pause, refreshOutline, chevronForward } from 'ionicons/icons';
 import { IonCol, IonGrid, IonInput, IonRow, IonToggle, IonProgressBar, IonLabel, IonSelect, IonSelectOption, IonIcon, IonPopover, IonContent, IonItem, IonNote, IonReorder } from '@ionic/react';
-import { RenderItemData } from '../data/RenderItemData';
-import * as Services from '../services/services';
+import { RenderItemData } from '../../data/RenderItemData';
+import * as Services from '../../services/services';
 
 
-import './RenderContainer.css';
-import * as Utils from '../utils/utils';
+import './RenderItem.css';
+import * as Utils from '../../utils/utils';
 
-export interface RenderContainerProps {
+export interface RenderItemProps {
   data: RenderItemData;
   onSceneChange: Function;
   onStartFrameChange: Function;
@@ -24,7 +24,7 @@ export interface RenderContainerProps {
 const debug: boolean = false;
 let framesAreValid: boolean = false;
 
-const RenderContainer: React.FC<RenderContainerProps> = (props) => {
+const RenderItem: React.FC<RenderItemProps> = (props) => {
 
   const firstRowElement = React.useRef<HTMLIonRowElement>(null);
   const secondRowElement = React.useRef<HTMLIonRowElement>(null);
@@ -158,4 +158,4 @@ const RenderContainer: React.FC<RenderContainerProps> = (props) => {
   );
 };
 
-export default RenderContainer;
+export default RenderItem;

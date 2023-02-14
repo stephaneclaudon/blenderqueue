@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { IonContent, IonHeader, IonPage, IonToolbar, IonList, IonButton, IonIcon, IonGrid, IonRow, IonCol, IonImg, useIonAlert, IonReorderGroup, ItemReorderEventDetail, IonReorder, IonItem, setupIonicReact } from '@ionic/react';
-import RenderContainer from '../components/RenderContainer';
+import RenderItem from '../components/RenderItem/RenderItem';
 import InfosContainer from '../components/Infos/InfosContainer';
 import { RenderItemData } from '../data/RenderItemData';
 import { subscribe, unsubscribe } from '../events/events';
@@ -306,7 +306,7 @@ const Home: React.FC = () => {
             <IonReorderGroup key={'IonReorderGroup'} disabled={(currentRenderJob && currentRenderJob.running)} onIonItemReorder={handleReorder}>
               {renderItems.map((renderItem: RenderItemData, index: number) =>
 
-                <RenderContainer
+                <RenderItem
                   onSelect={() => addSelectedItem(index)}
                   onExpand={() => onRenderItemExpand(renderItem)}
                   onRefresh={() => refreshItem(renderItem)}
