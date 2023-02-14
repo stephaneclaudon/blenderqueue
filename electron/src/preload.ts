@@ -19,7 +19,8 @@ contextBridge.exposeInMainWorld(
             "SavePreview",
             "GetData",
             "SaveData",
-            "ShowItemInFolder"
+            "ShowItemInFolder",
+            "ShowOpenDialog"
         ];
         if (validChannels.includes(channel)) {
             return ipcRenderer.invoke(channel, data);

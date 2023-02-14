@@ -196,7 +196,7 @@ const Home: React.FC = () => {
   };
 
   const onSettingsUpdated = () => {
-    console.log("onSettingsUpdated", GetData());
+    console.log("onSettingsUpdated");
   };
 
   const handleReorder = (event: CustomEvent<ItemReorderEventDetail>) => {
@@ -215,7 +215,6 @@ const Home: React.FC = () => {
   }
 
   const onSettingsLoaded = (settings: BlenderQueueData) => {
-    console.log(settings);
     for (let index = 0; index < settings.session.length; index++) {
       let renderItem: RenderItemData = new RenderItemData();
       Object.assign(renderItem, settings.session[index]);
@@ -224,7 +223,6 @@ const Home: React.FC = () => {
       renderItem.updateCommand();
       renderItems.push(renderItem);
     }
-
     setRenderItems([...renderItems]);
   }
 

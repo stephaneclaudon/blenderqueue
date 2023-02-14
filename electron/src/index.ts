@@ -1,8 +1,9 @@
 import type { CapacitorElectronConfig } from '@capacitor-community/electron';
 import { getCapacitorElectronConfig, setupElectronDeepLinking } from '@capacitor-community/electron';
-import { MenuItemConstructorOptions, shell } from 'electron';
+import { dialog, MenuItemConstructorOptions, shell } from 'electron';
 import { app, MenuItem, ipcMain } from 'electron';
 import { exec, execFile, fork, spawn } from "child_process";
+import fs from "fs";
 
 import electronIsDev from 'electron-is-dev';
 import unhandled from 'electron-unhandled';
@@ -173,9 +174,13 @@ ipcMain.handle('SavePreview', async (event, arg: Object) => {
   });
 });
 
+
+let saveProgressInfosInterval;
 let renderProcesses = [];
+let renderOutput = "";
 ipcMain.handle('Render', async (event, arg: Object) => {
-  let blenderBinary = dataManager.GetData().settings.blenderBinaryPath;
+  renderOutput = "";
+  let blenderBinary = dataManager.data.settings.blenderBinaryPath;
 
   console.log(blenderBinary, arg['args']);
 
@@ -185,6 +190,7 @@ ipcMain.handle('Render', async (event, arg: Object) => {
 
   child.stdout.on('data', function (data) {
     myCapacitorApp.getMainWindow().webContents.send('onRenderUpdate', data.toString());
+    renderOutput += data.toString();
   });
   child.stderr.on('data', function (data) {
     myCapacitorApp.getMainWindow().webContents.send('onRenderError', data.toString());
@@ -194,37 +200,46 @@ ipcMain.handle('Render', async (event, arg: Object) => {
   });
   child.on('close', function (code) {
     myCapacitorApp.getMainWindow().webContents.send('onRenderClose', code);
+    stopSavingProgressInfos();
   });
   child.on('exit', function (code) {
     myCapacitorApp.getMainWindow().webContents.send('onRenderExit', code);
+    stopSavingProgressInfos();
   });
   renderProcesses.push(child);
+
+  startSavingProgressInfos();
 });
 
 ipcMain.handle('PauseRender', async (event, arg: Object) => {
   for (const child of renderProcesses) {
     child.kill('SIGSTOP');
   }
+  stopSavingProgressInfos();
 });
 
 ipcMain.handle('ResumeRender', async (event, arg: Object) => {
   for (const child of renderProcesses) {
     child.kill('SIGCONT');
   }
+  startSavingProgressInfos();
 });
 
 ipcMain.handle('StopRender', async (event, arg: Object) => {
   for (const child of renderProcesses) {
     child.kill();
   }
+  stopSavingProgressInfos();
 });
 
 
 
 
-ipcMain.handle('ShowItemInFolder', async (event, filepath: string) => {
-  console.log("Opening folder", filepath);
+ipcMain.handle('ShowOpenDialog', async (event, filepath: string) => {
+  return dialog.showOpenDialog(myCapacitorApp.getMainWindow(), { properties: ['openDirectory'] })
+});
 
+ipcMain.handle('ShowItemInFolder', async (event, filepath: string) => {
   return shell.showItemInFolder(filepath);
 });
 
@@ -233,17 +248,44 @@ ipcMain.handle('GetData', async (event) => {
 });
 
 ipcMain.handle('SaveData', async (event, data: Object) => {
-  console.log("SAVING DATA");
-  console.log(data);
-  
+  console.log("Index::SaveData()", data);
   return dataManager.SaveData(data as BlenderQueueData)
 });
 
+let count = 0;
+const startSavingProgressInfos = () => {
+  if ((dataManager.data.settings.saveProgressInfosGUI || dataManager.data.settings.saveProgressInfosTxt) && dataManager.data.settings.saveProgressInfosPath != '') {
+    saveProgressInfosInterval = setInterval(() => {
+      if (dataManager.data.settings.saveProgressInfosGUI) {
+        try {
+          myCapacitorApp.getMainWindow().webContents.capturePage().then(image => {
+            fs.writeFile(pathJoin(dataManager.data.settings.saveProgressInfosPath, '_Blender Queue -- Progress.png'), image.toPNG(), (err) => {
+              if (err) throw err
+            })
+          });
+        }
+        catch (e) { console.error('Failed to capture screen'); console.log(e); }
+      }
+
+
+      if (dataManager.data.settings.saveProgressInfosTxt) {
+        try { fs.writeFileSync(pathJoin(dataManager.data.settings.saveProgressInfosPath, '_Blender Queue -- log.txt'), renderOutput, 'utf-8'); }
+        catch (e) { console.error('Failed to save log file !'); console.log(e); }
+      }
+
+    }, 5000); //tome in millis
+  }
+};
+
+const stopSavingProgressInfos = () => {
+  clearInterval(saveProgressInfosInterval);
+};
 
 const onAppQuit = () => {
   for (const child of renderProcesses) {
     child.kill();
   }
+  stopSavingProgressInfos();
 };
 
 app.on('will-quit', onAppQuit);

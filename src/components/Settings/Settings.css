@@ -1,4 +1,9 @@
-#blender-path-input {
+ion-item {
+    padding-bottom: 1em;
+}
+
+
+input[type=file] {
     opacity: 0;
     position: absolute;
 }

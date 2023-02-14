@@ -326,3 +326,16 @@ export const OpenFolder = (path: string) => {
         }
     });
 }
+
+export const BrowseFolder = () => {
+    //If electron not started, return fake data
+    try {
+        //@ts-ignore
+        return window.electronAPI.invoke('ShowOpenDialog');
+    }
+    catch (error) {
+        console.warn('BrowseFolder(), electron not started, can\'t open folder');
+        return undefined;
+    }
+
+}

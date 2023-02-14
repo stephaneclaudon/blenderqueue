@@ -74,6 +74,10 @@ export class DataManager {
         return this.dataObject;
     }
 
+    public get data() {
+        return this.dataObject;
+    }
+
     public async SaveData(data: BlenderQueueData) {
         this.dataObject = Object.assign(new BlenderQueueData(), data);
         return this.store.set(this.dataMainObjectName, this.dataObject);
@@ -83,9 +87,7 @@ export class DataManager {
 export class BlenderQueueData {
     public settings: BlenderQueueSettings = new BlenderQueueSettings();
     public session: Array<Object> = [];
-
     constructor() { };
-
 };
 
 export class BlenderQueueSettings {
@@ -95,4 +97,3 @@ export class BlenderQueueSettings {
     public saveProgressInfosGUI: boolean = false;
     constructor() { };
 };
-
