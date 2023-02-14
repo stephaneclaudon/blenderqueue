@@ -27,7 +27,6 @@ const Home: React.FC = () => {
   const [renderItems, setRenderItems] = useState(new Array<RenderItemData>());
   const [currentRenderId, setCurrentRenderId] = useState(-1);
   const [paused, setPaused] = useState(false);
-  const [stoped, setStoped] = useState(false);
   const [currentRenderJob, setCurrentRenderJob] = useState<RenderJob>();
   const [errorAlert] = useIonAlert();
 
@@ -78,21 +77,26 @@ const Home: React.FC = () => {
       ...renderItems
     ]);
 
+    dragCounter = 0;
     setDragging(false);
   };
 
   const onDragOver = (event: any) => {
     event.preventDefault();
     event.stopPropagation();
+    console.log("onDragOver");
   };
 
   const onDragEnter = (event: any) => {
+    console.log("onDragEnter");
     event.preventDefault();
     dragCounter++;
     setDragging(true);
   };
 
   const onDragLeave = (event: any) => {
+    console.log("onDragLeave");
+
     dragCounter--;
     if (dragCounter === 0)
       setDragging(false);
@@ -100,27 +104,27 @@ const Home: React.FC = () => {
 
   const startRender = (renderId: number) => {
     let render: RenderJob = new RenderJob(renderItems[renderId]);
+    render.onStop = onRenderStop;
     render.onClose = onRenderClose;
     render.onError = onRenderError;
     render.start();
     setCurrentRenderJob(render);
   }
 
+  const onRenderStop = () => {
+    setPaused(false);
+    setCurrentRenderJob(undefined);
+    setCurrentRenderId(-1);
+    setRenderItems([...renderItems]);
+  };
+
   const onRenderClose = (code: number) => {
-    if (stoped) {
-      setStoped(false);
-      setPaused(false);
+    if (hasNextRenderableItem(currentRenderId)) {
+      setCurrentRenderId(getNextRenderableItemId(currentRenderId));
+    }
+    else {
       setCurrentRenderJob(undefined);
       setCurrentRenderId(-1);
-    } else {
-
-      if (hasNextRenderableItem(currentRenderId)) {
-        setCurrentRenderId(getNextRenderableItemId(currentRenderId));
-      }
-      else {
-        setCurrentRenderJob(undefined);
-        setCurrentRenderId(-1);
-      }
     }
     setRenderItems([...renderItems]);
   };
@@ -266,11 +270,6 @@ const Home: React.FC = () => {
   }, [currentRenderId]);
 
   useEffect(() => {
-    if (stoped)
-      currentRenderJob?.stopRender();
-  }, [stoped]);
-
-  useEffect(() => {
     subscribe('errorAlert', onErrorAlert);
 
     document.addEventListener('drop', onDrop);
@@ -332,7 +331,7 @@ const Home: React.FC = () => {
                 }
                 {(currentRenderJob && currentRenderJob.running) &&
                   <IonButton onClick={() => {
-                    setStoped(true)
+                    currentRenderJob?.stopRender()
                   }} color="danger">
                     <IonIcon icon={stopSharp}></IonIcon>
                     Stop
@@ -353,40 +352,42 @@ const Home: React.FC = () => {
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen id="content">
+        {(renderItems.length > 0)
+          ? <IonList id='queue' onClick={() => deselectItems()}>
+            <IonReorderGroup key={'IonReorderGroup'} disabled={(currentRenderJob && currentRenderJob.running)} onIonItemReorder={handleReorder}>
+              {renderItems.map((renderItem: RenderItemData, index: number) =>
 
-        <IonList id='queue' onClick={() => deselectItems()}>
-          <IonReorderGroup key={'IonReorderGroup'} disabled={(currentRenderJob && currentRenderJob.running)} onIonItemReorder={handleReorder}>
-            {renderItems.map((renderItem: RenderItemData, index: number) =>
-
-              <RenderContainer
-                onSelect={() => addSelectedItem(index)}
-                onExpand={() => onRenderItemExpand(renderItem)}
-                onRefresh={() => refreshItem(renderItem)}
-                data={renderItem}
-                key={index}
-                onDelete={() => onRenderItemDelete(index)}
-                onToggleChange={() => {
-                  renderItem.enabled = !renderItem.enabled;
-                  if (renderItem.enabled)
-                    renderItem.status = RenderItemData.STATUS_PENDING;
-                  onRenderItemChange(renderItem);
-                }}
-                onSceneChange={(sceneName: string) => {
-                  renderItem.scene = sceneName;
-                  onRenderItemChange(renderItem);
-                }}
-                onStartFrameChange={(frame: number) => {
-                  renderItem.startFrame = frame;
-                  onRenderItemChange(renderItem);
-                }}
-                onEndFrameChange={(frame: number) => {
-                  renderItem.endFrame = frame;
-                  onRenderItemChange(renderItem);
-                }}
-                index={index} />
-            )}
-          </IonReorderGroup>
-        </IonList>
+                <RenderContainer
+                  onSelect={() => addSelectedItem(index)}
+                  onExpand={() => onRenderItemExpand(renderItem)}
+                  onRefresh={() => refreshItem(renderItem)}
+                  data={renderItem}
+                  key={index}
+                  onDelete={() => onRenderItemDelete(index)}
+                  onToggleChange={() => {
+                    renderItem.enabled = !renderItem.enabled;
+                    if (renderItem.enabled)
+                      renderItem.status = RenderItemData.STATUS_PENDING;
+                    onRenderItemChange(renderItem);
+                  }}
+                  onSceneChange={(sceneName: string) => {
+                    renderItem.scene = sceneName;
+                    onRenderItemChange(renderItem);
+                  }}
+                  onStartFrameChange={(frame: number) => {
+                    renderItem.startFrame = frame;
+                    onRenderItemChange(renderItem);
+                  }}
+                  onEndFrameChange={(frame: number) => {
+                    renderItem.endFrame = frame;
+                    onRenderItemChange(renderItem);
+                  }}
+                  index={index} />
+              )}
+            </IonReorderGroup>
+          </IonList>
+          : <div id="instructions">Drop Blender project files here, click "Render" to start rendering.</div>
+        }
 
         {currentRenderJob && currentRenderJob.running &&
           <InfosContainer renderJob={currentRenderJob} />
