@@ -68,7 +68,7 @@ const InfosContainer: React.FC<InfosContainerProps> = (props) => {
 
     return (
         <>
-            <div id='InfosContainer' >
+            <div id='InfosContainer' className={props.renderJob.paused?'paused':''} >
 
                 <IonSegment className="ion-justify-content-start" value={segment} onIonChange={(e) => handleSegmentChange(e)} >
                     <IonSegmentButton value='progress'>
@@ -90,9 +90,13 @@ const InfosContainer: React.FC<InfosContainerProps> = (props) => {
                                         </IonRow>
 
                                         <IonRow>
+                                            <IonProgressBar className='current-frame-progress' type={(props.renderJob.isFrameInitializing && !props.renderJob.paused)?'indeterminate':'determinate'} value={(props.renderJob.isFrameInitializing && props.renderJob.paused)?0.5:props.renderJob.currentFrameProgress} ></IonProgressBar>
+                                        </IonRow>
+
+                                        <IonRow>
                                             {(props.renderJob.renderItem.endFrame - props.renderJob.renderItem.startFrame > 1)
-                                                ?<IonProgressBar buffer={getBuffer()} value={getProgress()} ></IonProgressBar>
-                                                :<IonProgressBar type='indeterminate'></IonProgressBar>
+                                                ?<IonProgressBar className='main-progress' buffer={getBuffer()} value={getProgress()} ></IonProgressBar>
+                                                :<IonProgressBar className='main-progress' type='indeterminate'></IonProgressBar>
                                             }
                                         </IonRow>
 

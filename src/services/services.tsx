@@ -77,11 +77,12 @@ export class RenderJob {
     public onError: (data: string) => void = () => { };
     public onExit: (data: any) => void = () => { };
     public onClose: (code: number) => void = () => { };
+    public onStop: () => void = () => { };
 
     public outputString: string = "";
     public outputStringLastLine: string = "";
 
-    public frame: number = 0;
+    public frame: number = -1;
 
     public currentSamples: number = 0;
     public totalSamples: number = 0;
@@ -92,6 +93,9 @@ export class RenderJob {
     public startTime: number = 0;
     public elapsedTime: number = 0;
     public remainingTime: number = 0;
+    public currentFrameInitialRemainingTime: number = -1;
+    public currentFrameRemainingTime: number = 0;
+    public currentFrameProgress: number = 0;
 
     public running: boolean = false;
     public paused: boolean = false;
@@ -161,7 +165,7 @@ export class RenderJob {
                             this.onRenderClose(1);
                             return;
                         }
-                        setTimeout(interval, 5);
+                        setTimeout(interval, 500);
                     };
                     interval();
                 }
@@ -182,17 +186,21 @@ export class RenderJob {
     }
 
     public onRenderClose(code: number) {
+        console.log("RenderJob::onRenderClose()");
         if (!this.renderItem.hasFailed) {
             this.renderItem.status = RenderItemData.STATUS_DONE;
         }
-        this.onClose(code);
+        if (!this.stoped)
+            this.onClose(code);
     }
 
     public stopRender() {
+        console.log("RenderJob::stopRender()");
         this.stoped = true;
         this.running = false;
         this.paused = false;
         this.renderItem.status = RenderItemData.STATUS_ERROR;
+        this.onStop();
         //@ts-ignore
         try { window.electronAPI.invoke('StopRender', {}); } catch { }
     }
@@ -226,8 +234,25 @@ export class RenderJob {
             regex = /Fra:(?<frame>\d*)\s/;
             matches = line.match(regex);
 
-            if (matches && matches.groups)
-                this.frame = parseInt(matches.groups.frame);
+            if (matches && matches.groups) {
+                let f = parseInt(matches.groups.frame);
+                if (f != this.frame) {
+                    this.frame = parseInt(matches.groups.frame);
+                    this.currentFrameInitialRemainingTime = -1;
+                }
+            }
+
+            //Parsing currentFrame remaining time
+            regex = /Remaining:(?<minutes>\d*)\:(?<seconds>\d*)\.(?<hundredth>\d*)\s\|/;
+            matches = line.match(regex);
+            if (matches && matches.groups) {
+                this.currentFrameRemainingTime = this.computeTime(matches.groups.minutes, matches.groups.seconds, matches.groups.hundredth);
+                if (this.currentFrameInitialRemainingTime === -1)
+                    this.currentFrameInitialRemainingTime = this.currentFrameRemainingTime;
+
+                this.currentFrameProgress = (this.currentFrameInitialRemainingTime - this.currentFrameRemainingTime) / this.currentFrameInitialRemainingTime;
+            }
+            
 
             //Parsing current rendering frame evolution
             regex = /Fra:(?<frame>\d*).*Sample\s(?<currentSamples>\d*)\/(?<totalSamples>\d*)/;
@@ -255,13 +280,8 @@ export class RenderJob {
             //Parsing last frame time values
             regex = /Time:\s(?<minutes>\d*)\:(?<seconds>\d*)\.(?<hundredth>\d*)\s\(Saving/;
             matches = line.match(regex);
-            if (matches && matches.groups) {
-                this.lastFrameTime = 0;
-                this.lastFrameTime += (parseInt(matches.groups.minutes) * 60);
-                this.lastFrameTime += (parseInt(matches.groups.seconds));
-                this.lastFrameTime += parseInt(matches.groups.hundredth) / 100;
-                this.lastFrameTime *= 1000; //To milliseconds
-            }
+            if (matches && matches.groups)
+                this.lastFrameTime = this.computeTime(matches.groups.minutes, matches.groups.seconds, matches.groups.hundredth);
 
             this.remainingTime = (this.renderItem.endFrame - this.frame) * this.lastFrameTime;
             this.elapsedTime = Date.now() - this.startTime;
@@ -270,7 +290,20 @@ export class RenderJob {
         } catch (error) {
             console.warn(error);
         }
+    }
 
+    private computeTime(minutes: string, seconds: string, hundredth: string) {
+        let time = 0;
+        time += (parseInt(minutes) * 60);
+        time += (parseInt(seconds));
+        time += parseInt(hundredth) / 100;
+        time *= 1000; //To milliseconds
+
+        return time;
+    }
+
+    public get isFrameInitializing() {
+        return (this.currentFrameInitialRemainingTime === -1);
     }
 }
 

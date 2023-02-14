@@ -57,17 +57,25 @@
     text-align: left;
 }
 
-#InfosContainer ion-progress-bar {
+#InfosContainer ion-progress-bar.main-progress {
     height: 1em;
 }
 
-#InfosContainer ion-progress-bar::part(track) {
+#InfosContainer ion-progress-bar.main-progress::part(track) {
     background: #25b615;
 }
 
-#InfosContainer ion-progress-bar::part(stream) {
+#InfosContainer ion-progress-bar.main-progress::part(stream) {
     background-image: linear-gradient(90deg, var(--buffer-background) 0%, var(--buffer-background) 30%, transparent 30%);
     background-size: 0.4em 1em;
+}
+#InfosContainer.paused ion-progress-bar.main-progress::part(stream),
+#InfosContainer.paused ion-progress-bar::part(track) {
+    animation: none;
+}
+
+#InfosContainer.paused .indeterminate-bar-secondary {
+    animation: none !important;
 }
 
 #InfosContainer #progress {
@@ -78,8 +86,9 @@
 
 }
 
-#InfosContainer #progress ion-grid {
+#InfosContainer #progress > ion-grid {
     flex-grow: 1;
+    padding: 0;
 }
 
 #InfosContainer #log {
