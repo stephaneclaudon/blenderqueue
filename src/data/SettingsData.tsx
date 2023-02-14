@@ -1,13 +1,15 @@
 import { RenderItemData } from "./RenderItemData";
 
 export class BlenderQueueData {
-    public settings: BlenderQueueSettings = new BlenderQueueSettings;
-    public session: Array<RenderItemData> = [];
-
-    constructor() {};
+    public settings: BlenderQueueSettings = new BlenderQueueSettings();
+    public session: Array<Object> = [];
+    constructor() { };
 };
 
 export class BlenderQueueSettings {
-    public blenderBinaryPath:string = '';
-    constructor() {};
+    public blenderBinaryPath: string = '';
+    public saveProgressInfosPath: string = '';
+    public saveProgressInfosTxt: boolean = false;
+    public saveProgressInfosGUI: boolean = false;
+    constructor() { };
 };

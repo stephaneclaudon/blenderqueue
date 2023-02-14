@@ -53,24 +53,21 @@ const RenderItem: React.FC<RenderItemProps> = (props) => {
           >
             <IonCol size="2" class="ion-justify-content-evenly">
               <IonIcon className={props.data.expanded ? 'expand-icon opened' : 'expand-icon closed'} onClick={() => props.onExpand()} size="large" icon={chevronForward}></IonIcon>
-              {(props.data.isPending) &&
+              {(props.data.isPending || props.data.isInitializing) &&
                 <IonToggle
                   color={props.data.selected ? 'light' : 'primary'}
                   checked={props.data.enabled}
                   onIonChange={(event) => props.onToggleChange(event.target.value)}
                 ></IonToggle>
               }
-              {!(props.data.isPending) &&
-                <IonIcon className={(props.data.hasFailed || props.data.isDone) ? 'icon-button' : 'icon-button hidden'} onClick={() => props.onRefresh()} size="large" icon={refreshOutline}></IonIcon>
-              }
-
-
 
               {(props.data.isPaused) && <IonIcon size="large" color="warning" icon={pause}></IonIcon>}
-              {(!props.data.isPaused && props.data.isPending) && <IonIcon size="large" icon={timeOutline}></IonIcon>}
               {(!props.data.isPaused && props.data.isRendering) && <IonIcon className="renderingIcon" color="warning" size="large" icon={cogOutline}></IonIcon>}
               {(!props.data.isPaused && props.data.hasFailed) && <IonIcon color="danger" size="large" icon={alertCircleOutline}></IonIcon>}
               {(!props.data.isPaused && props.data.isDone) && <IonIcon color="success" size="large" icon={checkmarkCircleOutline}></IonIcon>}
+
+              <IonIcon className={(props.data.isRendering || props.data.isPaused) ? 'icon-button disabled' : 'icon-button'} onClick={() => props.onRefresh()} size="large" icon={refreshOutline}></IonIcon>
+
 
 
             </IonCol>

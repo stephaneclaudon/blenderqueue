@@ -79,12 +79,11 @@ ion-col {
 
 .renderItem .icon-button {
   cursor: pointer;
-  padding: 0 0.45em;
 }
 
-.renderItem .icon-button.hidden {
+.renderItem .icon-button.disabled {
   pointer-events: none;
-  opacity: 0;
+  opacity: 0.5;
 }
 
 .renderingIcon {

@@ -43,6 +43,10 @@ export class RenderItemData {
     this.getBlenderFileInfo(onSuccess, onError);
   }
 
+  public resetStatus() {
+    this.status = RenderItemData.STATUS_PENDING;
+  }
+
   private getBlenderFileInfo(onSuccess: Function, onError: Function) {
     this.status = RenderItemData.STATUS_INITIALIZING;
     Services.GetBlenderFileInfo(this.blendFilePath)
@@ -74,7 +78,6 @@ export class RenderItemData {
   public get scene() {
     return this.sceneName;
   }
-
 
   public get isReady() {
     return this.enabled && this.isPending && !this.isInitializing;
@@ -114,5 +117,11 @@ export class RenderItemData {
       "-a"
     ];
   };
+
+  public deserializeData() {
+    let fileData = new BlenderExtractData();
+    Object.assign(fileData, this.blendFileData);
+    this.blendFileData = fileData;
+  }
 
 }

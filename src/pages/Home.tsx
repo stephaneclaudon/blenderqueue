@@ -13,6 +13,7 @@ import { isHotkeyPressed } from 'react-hotkeys-hook'
 import './Home.css';
 import Settings from '../components/Settings/Settings';
 import DragDrop from '../components/DragDrop/DragDrop';
+import { BlenderQueueData, BlenderQueueSettings } from '../data/SettingsData';
 
 
 let canRender: boolean = false;
@@ -213,6 +214,20 @@ const Home: React.FC = () => {
     openSettingsBtn.current?.click();
   }
 
+  const onSettingsLoaded = (settings: BlenderQueueData) => {
+    console.log(settings);
+    for (let index = 0; index < settings.session.length; index++) {
+      let renderItem: RenderItemData = new RenderItemData();
+      Object.assign(renderItem, settings.session[index]);
+      renderItem.deserializeData();
+      renderItem.resetStatus();
+      renderItem.updateCommand();
+      renderItems.push(renderItem);
+    }
+
+    setRenderItems([...renderItems]);
+  }
+
 
   /* ------------------------- */
   /* -----    EFFECTS    ----- */
@@ -245,6 +260,16 @@ const Home: React.FC = () => {
   let renderAvailable = hasNextRenderableItem(currentRenderId);
   canRender = renderAvailable && !(renderJob && renderJob.running);
 
+
+
+
+
+
+
+
+
+
+
   return (
 
     <IonPage>
@@ -258,7 +283,7 @@ const Home: React.FC = () => {
               <IonCol size="11" class="ion-justify-content-end">
 
                 <IonIcon ref={openSettingsBtn} id="open-settings" size="large" icon={cog} className={(renderJob && renderJob.running) ? 'disabled' : ''}></IonIcon>
-                <Settings onSettingsUpdated={onSettingsUpdated}></Settings>
+                <Settings onSettingsUpdated={onSettingsUpdated} onSettingsLoaded={onSettingsLoaded} session={renderItems}></Settings>
 
 
                 {(renderJob && renderJob.running && !renderJob.paused) &&

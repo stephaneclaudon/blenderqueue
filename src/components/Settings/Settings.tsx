@@ -10,6 +10,7 @@ import {
     IonItem,
     IonLabel,
     IonInput,
+    useIonLoading,
 } from '@ionic/react';
 import { OverlayEventDetail } from '@ionic/core/components';
 import './Settings.css';
@@ -18,10 +19,16 @@ import { RenderItemData } from '../../data/RenderItemData';
 import { BlenderQueueData } from '../../data/SettingsData';
 
 export interface SettingsProps {
-    onSettingsUpdated: Function
+    onSettingsLoaded: Function,
+    onSettingsUpdated: Function,
+    session: Array<RenderItemData>
 };
 
+let inited = false;
+let settingsLoaded = false;
+
 const Settings: React.FC<SettingsProps> = (props) => {
+    const [presentLoading, dismissLoading] = useIonLoading();
     const [appSettings, setAppSettings] = useState(new BlenderQueueData());
 
     const input = useRef<HTMLIonInputElement>(null);
@@ -31,39 +38,59 @@ const Settings: React.FC<SettingsProps> = (props) => {
 
     const onExePathChange = (event: any) => {
         appSettings.settings.blenderBinaryPath = event.target.value;
-        setAppSettings({...appSettings});
+        setAppSettings({ ...appSettings });
     };
 
     const onBlenderExeChange = (event: any) => {
         if (blenderExeInputFile.current?.files && blenderExeInputFile.current.files.length > 0) {
             //@ts-ignore
             appSettings.settings.blenderBinaryPath = blenderExeInputFile.current?.files[0].path;
-            setAppSettings({...appSettings});
+            setAppSettings({ ...appSettings });
         }
     }
 
     function onWillDismiss(ev: CustomEvent<OverlayEventDetail>) {
         if (ev.detail.role === 'confirm') {
             console.log("Settings SaveData:", appSettings);
-            
-            Services.SaveData(appSettings).then((response:any) => {
+
+            Services.SaveData(appSettings).then((response: any) => {
                 props.onSettingsUpdated();
             }).catch(() => {
                 console.error("Can't save settings...");
-                
+
             });
         }
     }
 
     useEffect(() => {
-        console.log("Settings getData");
-        
+        if (settingsLoaded) {
+            console.log("Settings save session");
+            appSettings.session = props.session;
+            setAppSettings({ ...appSettings });
+            Services.SaveData(appSettings).then(() => {
+                console.log("Session saved");
+
+            }).catch(() => {
+                console.log("Settings.tsx, failed to save session");
+            });
+        }
+    }, [props.session]);
+
+    if (!inited) {
         Services.GetData().then((data: BlenderQueueData) => {
-            setAppSettings({...data});
+            setAppSettings({ ...data });
+            props.onSettingsLoaded(data);
         }).catch(() => {
             console.log("Settings.tsx, could not retrieve App Settings");
+        }).finally(() => {
+            settingsLoaded = true;
+            dismissLoading();
         });
-    }, [modal]);
+        presentLoading({
+            message: 'Loading, please wait...'
+        })
+        inited = true;
+    }
 
 
     return (

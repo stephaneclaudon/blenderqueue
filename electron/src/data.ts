@@ -35,7 +35,7 @@ export class DataManager {
             if (!this.dataObject.settings.blenderBinaryPath || this.dataObject.settings.blenderBinaryPath === '') {
                 console.log("Config file is empty, trying to guess blender's install folder...");
                 let blendBinary = ''
-                if (isMac) blendBinary = '/Applications/Blender.app/Contents/MacOS/Ble2nder';
+                if (isMac) blendBinary = '/Applications/Blender.app/Contents/MacOS/Blender';
                 else if (isWindows) blendBinary = 'data.settings.blenderBinaryPath', 'C:\Program Files\Blender Foundation\Blender\blender.exe';
                 else if (isLinux) blendBinary = 'data.settings.blenderBinaryPath', 'blender';
                 commandExists(blendBinary)
@@ -90,6 +90,9 @@ export class BlenderQueueData {
 
 export class BlenderQueueSettings {
     public blenderBinaryPath: string = '';
+    public saveProgressInfosPath: string = '';
+    public saveProgressInfosTxt: boolean = false;
+    public saveProgressInfosGUI: boolean = false;
     constructor() { };
 };
 

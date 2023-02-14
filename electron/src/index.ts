@@ -233,6 +233,9 @@ ipcMain.handle('GetData', async (event) => {
 });
 
 ipcMain.handle('SaveData', async (event, data: Object) => {
+  console.log("SAVING DATA");
+  console.log(data);
+  
   return dataManager.SaveData(data as BlenderQueueData)
 });
 
