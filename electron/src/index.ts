@@ -273,7 +273,7 @@ const startSavingProgressInfos = () => {
         catch (e) { console.error('Failed to save log file !'); console.log(e); }
       }
 
-    }, 5000); //tome in millis
+    }, 60000); //Save progress each minutes
   }
 };
 
