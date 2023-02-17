@@ -126,10 +126,11 @@ const blenderExtractScriptsPath = pathJoin(app.getAppPath(), 'assets', 'blender'
 
 
 ipcMain.handle('BlenderExtract', async (event, arg: Object) => {
+  let blenderBinary = dataManager.data.settings.blenderBinaryPath;
   return new Promise(function (resolve, reject) {
     let outputData: string = "";
     const spawn = require('child_process').spawn;
-    const scriptExecution = spawn("blender", ['-b', arg['blendFile'], '--python', blenderExtractScriptsPath]);
+    const scriptExecution = spawn(blenderBinary, ['-b', arg['blendFile'], '--python', blenderExtractScriptsPath]);
     scriptExecution.stdout.setEncoding('utf8');
     scriptExecution.stderr.setEncoding('utf8');
 

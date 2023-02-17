@@ -112,8 +112,8 @@ export class ElectronCapacitorApp {
       show: false,
       x: this.mainWindowState.x,
       y: this.mainWindowState.y,
-      width: this.mainWindowState.width,
-      height: this.mainWindowState.height,
+      width: 1000,
+      height: 800,
       resizable: false,
       webPreferences: {
         nodeIntegration: true,

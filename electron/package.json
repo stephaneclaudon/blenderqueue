@@ -6,18 +6,14 @@
     "name": "",
     "email": ""
   },
-  "repository": {
-    "type": "git",
-    "url": ""
-  },
   "license": "MIT",
   "main": "build/src/index.js",
   "scripts": {
     "build": "tsc && electron-rebuild",
     "electron:start-live": "node ./live-runner.js",
     "electron:start": "npm run build && electron --inspect=5858 ./",
-    "electron:pack": "npm run build && electron-builder build --dir -c ./electron-builder.config.json",
-    "electron:make": "npm run build && electron-builder build -c ./electron-builder.config.json -p always"
+    "electron:pack": "npm run build && electron-builder build --mac -c ./electron-builder.config.json",
+    "electron:make": "npm run build && electron-builder build --mac -c ./electron-builder.config.json -p always"
   },
   "dependencies": {
     "@capacitor-community/electron": "^4.1.1",
@@ -26,11 +22,14 @@
     "electron-serve": "~1.1.0",
     "electron-unhandled": "~4.0.1",
     "electron-updater": "~5.0.1",
-    "electron-window-state": "~5.0.3"
+    "electron-window-state": "~5.0.3",
+    "electron-store": "^8.1.0",
+    "command-exists-promise": "^2.0.2"
   },
   "devDependencies": {
-    "electron": "^19.0.0",
-    "electron-builder": "~22.14.13",
+    "electron": "^23.1.0",
+    "electron-builder": "~23.6.0",
+    "electron-packager": "^17.1.1",
     "electron-rebuild": "^3.2.7",
     "typescript": "~4.3.5"
   },

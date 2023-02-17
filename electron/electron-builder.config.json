@@ -1,5 +1,12 @@
 {
-  "appId": "com.yourdoamnin.yourapp",
+  "appId": "com.sclaudon.blenderqueue",
+  "asar": false,
+  "publish": {
+    "provider": "github",
+    "owner": "stephaneclaudon",
+    "repo": "blenderqueue",
+    "vPrefixedTagName": true
+  },
   "directories": {
     "buildResources": "resources"
   },
@@ -9,9 +16,6 @@
     "capacitor.config.*",
     "app/**/*"
   ],
-  "publish": {
-    "provider": "github"
-  },
   "nsis": {
     "allowElevation": true,
     "oneClick": false,
@@ -22,7 +26,11 @@
     "icon": "assets/appIcon.ico"
   },
   "mac": {
-    "category": "your.app.category.type",
+    "icon": "assets/appIcon.icns",
+    "category": "public.app-category.utilities",
     "target": "dmg"
+  },
+  "linux": {
+    "icon": "assets/icons"
   }
 }
