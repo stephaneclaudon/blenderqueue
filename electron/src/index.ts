@@ -2,8 +2,11 @@ import type { CapacitorElectronConfig } from '@capacitor-community/electron';
 import { getCapacitorElectronConfig, setupElectronDeepLinking } from '@capacitor-community/electron';
 import { dialog, MenuItemConstructorOptions, shell } from 'electron';
 import { app, MenuItem, ipcMain } from 'electron';
-import { exec, execFile, fork, spawn } from "child_process";
+import { spawn } from "child_process";
+import suspend from "psuspend";
+
 import fs from "fs";
+import os from 'os';
 
 import electronIsDev from 'electron-is-dev';
 import unhandled from 'electron-unhandled';
@@ -15,6 +18,11 @@ import { copyFile } from 'fs/promises';
 
 
 import { BlenderQueueData, DataManager } from './data';
+
+export const isMac = os.platform() === "darwin";
+export const isWindows = os.platform() === "win32";
+export const isLinux = os.platform() === "linux";
+
 
 // Graceful handling of unhandled errors.
 unhandled();
@@ -207,21 +215,27 @@ ipcMain.handle('Render', async (event, arg: Object) => {
     myCapacitorApp.getMainWindow()?.webContents.send('onRenderExit', code);
     stopSavingProgressInfos();
   });
-  
+
   renderProcesses.push(child);
   startSavingProgressInfos();
 });
 
 ipcMain.handle('PauseRender', async (event, arg: Object) => {
   for (const child of renderProcesses) {
-    child.kill('SIGSTOP');
+    if (isWindows)
+      suspend(child.pid);
+    else
+      child.kill('SIGSTOP');
   }
   stopSavingProgressInfos();
 });
 
 ipcMain.handle('ResumeRender', async (event, arg: Object) => {
   for (const child of renderProcesses) {
-    child.kill('SIGCONT');
+    if (isWindows)
+      suspend(child.pid, false);
+    else
+      child.kill('SIGCONT');
   }
   startSavingProgressInfos();
 });

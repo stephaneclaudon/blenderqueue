@@ -1,6 +1,6 @@
 {
   "appId": "com.sclaudon.blenderqueue",
-  "asar": false,
+  "asar": true,
   "publish": {
     "provider": "github",
     "owner": "stephaneclaudon",
