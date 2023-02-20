@@ -1,50 +1,51 @@
-const fs = require('fs');
-fs.copyFileSync('/Users/stephane/Downloads/BlenderTest/0001.png', '/Users/stephane/Documents/WORKSPACE/BlenderQueue/electron/app/tmp/renderPreview.png');
-fs.copyFileSync('/Users/stephane/Downloads/BlenderTest/0001.png', '/Users/stephane/Documents/WORKSPACE/BlenderQueue/electron/app/tmp/renderPreview.png');
-fs.copyFileSync('/Users/stephane/Downloads/BlenderTest/0001.png', '/Users/stephane/Documents/WORKSPACE/BlenderQueue/electron/app/tmp/renderPreview.png');
 
 
-/*
-var spawn = require('child_process').spawn;
-let command = "blender -b /Users/stephane/Documents/WORKSPACE/BlenderQueue/electron/app/blender/BlenderExtract/BlenderExtract.blend -a -S Scene -s 1 -e 250";
+let arg = {
+  "blendPath": 'blender',
+  "blendFile": '/Users/stephane/Documents/WORKSPACE/BlenderQueue/electron/assets/blender/BlenderExtract.blend',
+  "script": '/Users/stephane/Documents/WORKSPACE/BlenderQueue/electron/assets/blender/BlenderExtract.py'
+}
 
-let scriptOutput = "";
 
-  //console.log(arg['binary']);
-  //console.log(arg['args']);
-  let arg = {
-    "binary": 'blender',
-    "args": [
-        '-b',
-        '/Users/stephane/Documents/WORKSPACE/BlenderQueue/electron/app/blender/BlenderExtract/BlenderExtract.blend',
-        '-a',
-        '-S Scene',
-        '-s 1',
-        '-e 250'
-      ]
-  }
-  let arguments = arg['args'].join(' ');
-  
-  const child = spawn(arg['binary'], arg['args']);
-  child.stdout.setEncoding('utf8');
-  child.stdout.on('data', function (data) {
-    console.log(data);
-    data = data.toString();
-    scriptOutput += data;
+const BlenderExtract = async () => {
+  return new Promise(function (resolve, reject) {
+    let outputData = "";
+    const spawn = require('child_process').spawn;
+    const scriptExecution = spawn(arg['blendPath'], ['-b', arg['blendFile'], '--python', arg['script']]);
+    scriptExecution.stdout.setEncoding('utf8');
+    scriptExecution.stderr.setEncoding('utf8');
+
+    scriptExecution.stdout.on('data', (stdout) => {
+      console.log("received data", stdout);
+      outputData = outputData + stdout.toString();
+    });
+
+    scriptExecution.stderr.on('data', (stderr) => {
+      reject(stderr.toString());
+    });
+    scriptExecution.on('error', function (error) {
+      reject(error.toString());
+    });
+
+    scriptExecution.on('exit', (code) => {
+      try {
+        const regexpContent = /---blenderextract---(?<jsonData>(.|\n)*)---blenderextract---/;
+
+        console.log("All data", outputData);
+        const match = outputData.match(regexpContent);
+        console.log("Matches", match);
+        const data = JSON.parse(match.groups.jsonData);
+
+        resolve(data);
+      } catch (error) {
+        reject(error);
+      }
+    });
   });
+};
 
-  child.stderr.setEncoding('utf8');
-  child.stderr.on('data', function (data) {
-    //Here is where the error output goes
-    //console.log('stderr: ' + data);
-    data = data.toString();
-    scriptOutput += data;
-  });
-
-  child.on('close', function (code) {
-    //Here you can get the exit code of the script
-    console.log('closing code: ' + code);
-    console.log('Full output of script: ', scriptOutput);
-  });
-
-  return child;*/
+BlenderExtract().then((data) => {
+  console.error(data);
+}).catch((err) => {
+  console.error(err);
+});

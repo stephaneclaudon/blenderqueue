@@ -42,14 +42,17 @@ ion-col {
   pointer-events: none;
 }
 
-.renderItem .disabled ion-col:not(.toggle)>* {
+.renderItem .disabled ion-col > * {
   opacity: 0.2;
   pointer-events: none;
 }
 
 .renderItem .disabled ion-col ion-toggle {
-
+  opacity: 1 !important;
   pointer-events: auto !important;
+}
+.renderItem ion-col ion-icon {
+  padding: 0 21px;
 }
 
 .renderItem .file-name {

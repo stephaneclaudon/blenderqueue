@@ -36,8 +36,8 @@ export class DataManager {
                 console.log("Config file is empty, trying to guess blender's install folder...");
                 let blendBinary = ''
                 if (isMac) blendBinary = '/Applications/Blender.app/Contents/MacOS/Blender';
-                else if (isWindows) blendBinary = 'data.settings.blenderBinaryPath', 'C:\Program Files\Blender Foundation\Blender\blender.exe';
-                else if (isLinux) blendBinary = 'data.settings.blenderBinaryPath', 'blender';
+                else if (isWindows) blendBinary = '';
+                else if (isLinux) blendBinary = '';
                 commandExists(blendBinary)
                     .then(async exists => {
                         if (exists) {
@@ -46,7 +46,7 @@ export class DataManager {
                             resolve(blendBinary + " exists, adding it to default config file.");
                         } else {
                             console.log(blendBinary + " Doesn't exists...");
-                            reject('"' + blendBinary + '" doesn\'t exists, please check your settings...');
+                            reject('Blender path "' + blendBinary + '" doesn\'t exists, please check your settings...');
                         }
                     })
                     .catch(err => {
@@ -59,7 +59,7 @@ export class DataManager {
                         if (exists) {
                             resolve(this.dataObject.settings.blenderBinaryPath + ' already set.');
                         } else {
-                            reject('"' + this.dataObject.settings.blenderBinaryPath + '" doesn\'t exists, please check your settings...');
+                            reject('Blender path "' + this.dataObject.settings.blenderBinaryPath + '" doesn\'t exists, please enter the path to blender\'s executable');
                         }
                     })
                     .catch(err => {

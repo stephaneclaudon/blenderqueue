@@ -30,7 +30,10 @@
     "category": "public.app-category.utilities",
     "target": "dmg"
   },
+  "dmg": {
+    "background" : "assets/dmg/background.png"
+  },
   "linux": {
-    "icon": "assets/icons"
+    "icon": "assets/appIcon-512x512.png"
   }
 }

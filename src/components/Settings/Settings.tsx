@@ -86,7 +86,6 @@ const Settings: React.FC<SettingsProps> = (props) => {
     const saveData = () => {
         setAppSettings({ ...appSettings });
         Services.SaveData(appSettings).then(() => {
-            console.log("Settings saved");
             props.onSettingsUpdated();
         }).catch(() => {
             console.log("Settings.tsx, failed to save session");
@@ -95,7 +94,6 @@ const Settings: React.FC<SettingsProps> = (props) => {
 
     function onWillDismiss(ev: CustomEvent<OverlayEventDetail>) {
         if (ev.detail.role === 'confirm') {
-            console.log("Settings SaveData:", appSettings);
             saveData();
         }
     }
@@ -125,7 +123,7 @@ const Settings: React.FC<SettingsProps> = (props) => {
     }
 
     return (
-        <IonModal ref={modal} trigger="open-settings" onWillDismiss={(ev) => onWillDismiss(ev)}>
+        <IonModal ref={modal} trigger="open-settings" onWillDismiss={(ev) => onWillDismiss(ev)} id="settings">
             <IonHeader>
                 <IonToolbar>
                     <IonButtons slot="start">
@@ -150,12 +148,12 @@ const Settings: React.FC<SettingsProps> = (props) => {
 
                 <IonItem>
                     <IonLabel>Save progress information (Text)</IonLabel>
-                    <IonCheckbox slot="end" value={appSettings.settings.saveProgressInfosTxt} onIonChange={onProgressTxtChange}></IonCheckbox>
+                    <IonCheckbox slot="end" checked={appSettings.settings.saveProgressInfosTxt} value={appSettings.settings.saveProgressInfosTxt} onIonChange={onProgressTxtChange}></IonCheckbox>
                 </IonItem>
 
                 <IonItem>
                     <IonLabel>Save progress information (GUI)</IonLabel>
-                    <IonCheckbox slot="end" value={appSettings.settings.saveProgressInfosGUI} onIonChange={onProgressGUIChange}></IonCheckbox>
+                    <IonCheckbox slot="end" checked={appSettings.settings.saveProgressInfosGUI} value={appSettings.settings.saveProgressInfosGUI} onIonChange={onProgressGUIChange}></IonCheckbox>
                 </IonItem>
 
                 {(appSettings.settings.saveProgressInfosGUI || appSettings.settings.saveProgressInfosTxt) &&

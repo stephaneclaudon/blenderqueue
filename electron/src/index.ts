@@ -8,7 +8,7 @@ import fs from "fs";
 import electronIsDev from 'electron-is-dev';
 import unhandled from 'electron-unhandled';
 import { autoUpdater } from 'electron-updater';
-import { join as pathJoin } from 'path';
+import path from 'path';
 
 import { ElectronCapacitorApp, setupContentSecurityPolicy, setupReloadWatcher } from './setup';
 import { copyFile } from 'fs/promises';
@@ -121,8 +121,8 @@ dataManager.init().then((response: string) => {
 });
 
 
-const tmpFolderPath = pathJoin(app.getAppPath(), 'app', 'tmp');
-const blenderExtractScriptsPath = pathJoin(app.getAppPath(), 'assets', 'blender', 'BlenderExtract.py');
+const tmpFolderPath = path.join(app.getAppPath(), 'app', 'tmp');
+const blenderExtractScriptsPath = path.join(app.getAppPath(), 'assets', 'blender', 'BlenderExtract.py');
 
 
 ipcMain.handle('BlenderExtract', async (event, arg: Object) => {
@@ -147,7 +147,7 @@ ipcMain.handle('BlenderExtract', async (event, arg: Object) => {
 
     scriptExecution.on('exit', (code: any) => {
       try {
-        const regexpContent = /---blenderextract---(?<jsonData>(.|\n)*)---blenderextract---/;
+        const regexpContent = /---blenderextract---(?<jsonData>(.|\n|\r)*)---blenderextract---/;
         const match = outputData.match(regexpContent);
         const data = JSON.parse(match.groups.jsonData);
 
@@ -161,8 +161,8 @@ ipcMain.handle('BlenderExtract', async (event, arg: Object) => {
 
 ipcMain.handle('SavePreview', async (event, arg: Object) => {
   return new Promise(function (resolve, reject) {
-    let previewAbsolutePath = pathJoin(tmpFolderPath, 'renderPreview.png');
-    let previewWebPath = pathJoin('tmp', 'renderPreview.png');
+    let previewAbsolutePath = path.join(tmpFolderPath, 'renderPreview.png');
+    let previewWebPath = path.join('tmp', 'renderPreview.png');
     try {
       copyFile(arg['filePath'], previewAbsolutePath).then(() => {
         resolve(previewWebPath);
@@ -190,25 +190,25 @@ ipcMain.handle('Render', async (event, arg: Object) => {
   child.stderr.setEncoding('utf8');
 
   child.stdout.on('data', function (data) {
-    myCapacitorApp.getMainWindow().webContents.send('onRenderUpdate', data.toString());
+    myCapacitorApp.getMainWindow()?.webContents.send('onRenderUpdate', data.toString());
     renderOutput += data.toString();
   });
   child.stderr.on('data', function (data) {
-    myCapacitorApp.getMainWindow().webContents.send('onRenderError', data.toString());
+    myCapacitorApp.getMainWindow()?.webContents.send('onRenderError', data.toString());
   });
   child.on('error', function (error) {
-    myCapacitorApp.getMainWindow().webContents.send('onRenderError', error.toString());
+    myCapacitorApp.getMainWindow()?.webContents.send('onRenderError', error.toString());
   });
   child.on('close', function (code) {
-    myCapacitorApp.getMainWindow().webContents.send('onRenderClose', code);
+    myCapacitorApp.getMainWindow()?.webContents.send('onRenderClose', code);
     stopSavingProgressInfos();
   });
   child.on('exit', function (code) {
-    myCapacitorApp.getMainWindow().webContents.send('onRenderExit', code);
+    myCapacitorApp.getMainWindow()?.webContents.send('onRenderExit', code);
     stopSavingProgressInfos();
   });
+  
   renderProcesses.push(child);
-
   startSavingProgressInfos();
 });
 
@@ -228,7 +228,9 @@ ipcMain.handle('ResumeRender', async (event, arg: Object) => {
 
 ipcMain.handle('StopRender', async (event, arg: Object) => {
   for (const child of renderProcesses) {
-    child.kill();
+    child.stdout.destroy();
+    child.stderr.destroy();
+    child.kill('SIGKILL');
   }
   stopSavingProgressInfos();
 });
@@ -241,7 +243,16 @@ ipcMain.handle('ShowOpenDialog', async (event, filepath: string) => {
 });
 
 ipcMain.handle('ShowItemInFolder', async (event, filepath: string) => {
-  return shell.showItemInFolder(filepath);
+  let folder = path.normalize(filepath);
+  try {
+    if (!fs.statSync(folder).isDirectory()) {
+      folder = path.dirname(folder);
+    }
+  } catch (err) {
+    folder = path.dirname(folder);
+  }
+
+  return shell.showItemInFolder(folder);
 });
 
 ipcMain.handle('GetData', async (event) => {
@@ -260,7 +271,7 @@ const startSavingProgressInfos = () => {
       if (dataManager.data.settings.saveProgressInfosGUI) {
         try {
           myCapacitorApp.getMainWindow().webContents.capturePage().then(image => {
-            fs.writeFile(pathJoin(dataManager.data.settings.saveProgressInfosPath, '_Blender Queue -- Progress.png'), image.toPNG(), (err) => {
+            fs.writeFile(path.join(dataManager.data.settings.saveProgressInfosPath, '_Blender Queue -- Progress.png'), image.toPNG(), (err) => {
               if (err) throw err
             })
           });
@@ -270,7 +281,7 @@ const startSavingProgressInfos = () => {
 
 
       if (dataManager.data.settings.saveProgressInfosTxt) {
-        try { fs.writeFileSync(pathJoin(dataManager.data.settings.saveProgressInfosPath, '_Blender Queue -- log.txt'), renderOutput, 'utf-8'); }
+        try { fs.writeFileSync(path.join(dataManager.data.settings.saveProgressInfosPath, '_Blender Queue -- log.txt'), renderOutput, 'utf-8'); }
         catch (e) { console.error('Failed to save log file !'); console.log(e); }
       }
 
@@ -284,7 +295,9 @@ const stopSavingProgressInfos = () => {
 
 const onAppQuit = () => {
   for (const child of renderProcesses) {
-    child.kill();
+    child.stdout.destroy();
+    child.stderr.destroy();
+    child.kill('SIGKILL');
   }
   stopSavingProgressInfos();
 };

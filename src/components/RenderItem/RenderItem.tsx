@@ -51,8 +51,8 @@ const RenderItem: React.FC<RenderItemProps> = (props) => {
             onClick={(event) => onClick(event)}
             className={(props.data.isInitializing) ? 'locked' : (props.data.enabled ? '' : 'disabled')}
           >
-            <IonCol size="2" class="ion-justify-content-evenly">
-              <IonIcon className={props.data.expanded ? 'expand-icon opened' : 'expand-icon closed'} onClick={() => props.onExpand()} size="large" icon={chevronForward}></IonIcon>
+            <IonCol size="2" class="ion-justify-content-around">
+              <IonIcon className={props.data.expanded ? 'expand-icon opened' : 'expand-icon closed'} onClick={() => props.onExpand()} size="small" icon={chevronForward}></IonIcon>
               {(props.data.isPending || props.data.isInitializing) &&
                 <IonToggle
                   color={props.data.selected ? 'light' : 'primary'}
@@ -61,12 +61,12 @@ const RenderItem: React.FC<RenderItemProps> = (props) => {
                 ></IonToggle>
               }
 
-              {(props.data.isPaused) && <IonIcon size="large" color="warning" icon={pause}></IonIcon>}
-              {(!props.data.isPaused && props.data.isRendering) && <IonIcon className="renderingIcon" color="warning" size="large" icon={cogOutline}></IonIcon>}
-              {(!props.data.isPaused && props.data.hasFailed) && <IonIcon color="danger" size="large" icon={alertCircleOutline}></IonIcon>}
-              {(!props.data.isPaused && props.data.isDone) && <IonIcon color="success" size="large" icon={checkmarkCircleOutline}></IonIcon>}
+              {(props.data.isPaused) && <IonIcon size="small" color="warning" icon={pause}></IonIcon>}
+              {(!props.data.isPaused && props.data.isRendering) && <IonIcon className="renderingIcon" color="warning" size="small" icon={cogOutline}></IonIcon>}
+              {(!props.data.isPaused && props.data.hasFailed) && <IonIcon color="danger" size="small" icon={alertCircleOutline}></IonIcon>}
+              {(!props.data.isPaused && props.data.isDone) && <IonIcon color="success" size="small" icon={checkmarkCircleOutline}></IonIcon>}
 
-              <IonIcon className={(props.data.isRendering || props.data.isPaused) ? 'icon-button disabled' : 'icon-button'} onClick={() => props.onRefresh()} size="large" icon={refreshOutline}></IonIcon>
+              <IonIcon className={(props.data.isRendering || props.data.isPaused) ? 'icon-button disabled' : 'icon-button'} onClick={() => props.onRefresh()} size="small" icon={refreshOutline}></IonIcon>
 
 
 
@@ -90,35 +90,32 @@ const RenderItem: React.FC<RenderItemProps> = (props) => {
               <IonItem
                 className={`${framesAreValid && 'ion-valid'} ${framesAreValid === false && 'ion-invalid'}`}
                 fill={(props.data.isReady) ? 'solid' : undefined}>
-                {!(props.data.isReady)
-                  ? <span>{props.data.startFrame}</span>
-                  : <IonInput
-                    type="number"
-                    placeholder={props.data.sceneData.start.toString()}
-                    onIonChange={(event) => props.onStartFrameChange(event.target.value)}
-                    value={props.data.startFrame}>
-                  </IonInput>
-                }
+                <IonInput
+                  readonly={!(props.data.isReady)}
+                  type="number"
+                  placeholder={props.data.sceneData.start.toString()}
+                  onIonChange={(event) => props.onStartFrameChange(event.target.value)}
+                  value={props.data.startFrame}>
+                </IonInput>
+
               </IonItem>
             </IonCol>
             <IonCol size="2">
               <IonItem
                 className={`${framesAreValid && 'ion-valid'} ${framesAreValid === false && 'ion-invalid'}`}
                 fill={(props.data.isReady) ? 'solid' : undefined}>
-                {!(props.data.isReady)
-                  ? <span>{props.data.endFrame}</span>
-                  : <IonInput
-                    type="number"
-                    placeholder={props.data.sceneData.end.toString()}
-                    onIonChange={(event) => props.onEndFrameChange(event.target.value)}
-                    value={props.data.endFrame}>
-                  </IonInput>
-                }
+                <IonInput
+                  readonly={!(props.data.isReady)}
+                  type="number"
+                  placeholder={props.data.sceneData.end.toString()}
+                  onIonChange={(event) => props.onEndFrameChange(event.target.value)}
+                  value={props.data.endFrame}>
+                </IonInput>
               </IonItem>
             </IonCol>
             <IonCol size="1" class="ion-justify-content-end">
               {(!props.data.isPaused && !props.data.isRendering) &&
-                <IonIcon className='icon-button' onClick={() => props.onDelete()} size="large" icon={trashOutline}></IonIcon>
+                <IonIcon className='icon-button' onClick={() => props.onDelete()} size="small" icon={trashOutline}></IonIcon>
               }
             </IonCol>
           </IonRow>

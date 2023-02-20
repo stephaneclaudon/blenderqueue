@@ -102,7 +102,7 @@ export class ElectronCapacitorApp {
       join(app.getAppPath(), 'assets', process.platform === 'win32' ? 'appIcon.ico' : 'appIcon.png')
     );
     this.mainWindowState = windowStateKeeper({
-      defaultWidth: 1000,
+      defaultWidth: 1200,
       defaultHeight: 800,
     });
     // Setup preload script path and construct our main window.
@@ -112,12 +112,15 @@ export class ElectronCapacitorApp {
       show: false,
       x: this.mainWindowState.x,
       y: this.mainWindowState.y,
-      width: 1000,
+      width: 1200,
       height: 800,
       resizable: false,
+      fullscreen: false,
+      fullscreenable: false,
       webPreferences: {
         nodeIntegration: true,
         contextIsolation: true,
+        devTools: !app.isPackaged,
         // Use preload to inject the electron varriant overrides for capacitor plugins.
         // preload: join(app.getAppPath(), "node_modules", "@capacitor-community", "electron", "dist", "runtime", "electron-rt.js"),
         preload: preloadPath,
