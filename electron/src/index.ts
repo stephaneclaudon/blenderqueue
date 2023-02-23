@@ -138,7 +138,17 @@ ipcMain.handle('BlenderExtract', async (event, arg: Object) => {
   return new Promise(function (resolve, reject) {
     let outputData: string = "";
     const spawn = require('child_process').spawn;
-    const scriptExecution = spawn(blenderBinary, ['-b', arg['blendFile'], '--python', blenderExtractScriptsPath]);
+    const scriptExecution = spawn(blenderBinary,
+      [
+        '-b',
+        arg['blendFile'],
+        '--python',
+        blenderExtractScriptsPath
+      ],
+      {
+        shell: true
+      }
+    );
     scriptExecution.stdout.setEncoding('utf8');
     scriptExecution.stderr.setEncoding('utf8');
 
@@ -193,7 +203,13 @@ ipcMain.handle('Render', async (event, arg: Object) => {
 
   console.log(blenderBinary, arg['args']);
 
-  const child = spawn(blenderBinary, arg['args']);
+  const child = spawn(
+    blenderBinary,
+    arg['args'],
+    {
+      shell: true
+    }
+  );
   child.stdout.setEncoding('utf8');
   child.stderr.setEncoding('utf8');
 
@@ -249,8 +265,9 @@ ipcMain.handle('StopRender', async (event, arg: Object) => {
   stopSavingProgressInfos();
 });
 
-
-
+ipcMain.handle('SetProgress', async (event, progress: number) => {
+  myCapacitorApp.getMainWindow().setProgressBar(progress);
+});
 
 ipcMain.handle('ShowOpenDialog', async (event, filepath: string) => {
   return dialog.showOpenDialog(myCapacitorApp.getMainWindow(), { properties: ['openDirectory'] })

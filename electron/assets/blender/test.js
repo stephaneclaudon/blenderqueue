@@ -1,17 +1,18 @@
 
+var spawn = require("child_process").spawn;
 
 let arg = {
-  "blendPath": 'blender',
+  "blendPath": '/Applications/Blender.app/Contents/MacOS/Blender',
   "blendFile": '/Users/stephane/Documents/WORKSPACE/BlenderQueue/electron/assets/blender/BlenderExtract.blend',
   "script": '/Users/stephane/Documents/WORKSPACE/BlenderQueue/electron/assets/blender/BlenderExtract.py'
 }
-
 
 const BlenderExtract = async () => {
   return new Promise(function (resolve, reject) {
     let outputData = "";
     const spawn = require('child_process').spawn;
-    const scriptExecution = spawn(arg['blendPath'], ['-b', arg['blendFile'], '--python', arg['script']]);
+    //const scriptExecution = spawn(arg['blendPath'], ['-b', arg['blendFile'], '--python', arg['script']]);
+    const scriptExecution = spawn(arg['blendPath'], ['-b', arg['blendFile'], '-a']);
     scriptExecution.stdout.setEncoding('utf8');
     scriptExecution.stderr.setEncoding('utf8');
 
@@ -43,9 +44,53 @@ const BlenderExtract = async () => {
     });
   });
 };
+let renderOutput = "";
+const Render = async () => {
+  return new Promise(function (resolve, reject) {
+    const child = spawn(arg['blendPath'], 
+    [
+      '-b',
+      '/Users/stephane/Dropbox/Kinetic_movie/Blender/dirigeable.blend',
+      '-a'
+    ],
+    {
+      shell: true
+    });
+    child.stdout.setEncoding('utf8');
+    child.stderr.setEncoding('utf8');
 
+    child.stdout.on('data', function (data) {
+      renderOutput += data.toString();
+      //console.log(data.toString());
+    });
+    child.stderr.on('data', function (data) {
+      console.error(data);
+    });
+    child.on('error', function (error) {
+      console.error(data);
+    });
+    child.on('close', function (code) {
+      console.log("All data", renderOutput);
+    });
+    child.on('exit', function (code) {
+      console.log("All data", renderOutput);
+    });
+
+    console.log(child);
+  });
+};
+
+
+
+Render().then((data) => {
+  console.error(data);
+}).catch((err) => {
+  console.error(err);
+});
+/*
 BlenderExtract().then((data) => {
   console.error(data);
 }).catch((err) => {
   console.error(err);
 });
+*/

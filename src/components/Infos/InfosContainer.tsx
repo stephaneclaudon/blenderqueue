@@ -32,7 +32,7 @@ const InfosContainer: React.FC<InfosContainerProps> = (props) => {
     };
 
     const getProgressPercent = () => {
-        return Math.floor(getProgress() * 100).toString() + '%';
+        return Math.floor(props.renderJob.progress * 100).toString() + '%';
     };
 
     const getProgressString = () => {
@@ -44,12 +44,8 @@ const InfosContainer: React.FC<InfosContainerProps> = (props) => {
             + ')';
     };
 
-    const getProgress = () => {
-        return (props.renderJob.frame - props.renderJob.renderItem.startFrame) / (props.renderJob.renderItem.endFrame - props.renderJob.renderItem.startFrame + 1);
-    };
-
     const getBuffer = () => {
-        return getProgress() + (1 / (props.renderJob.renderItem.endFrame - props.renderJob.renderItem.startFrame + 1));
+        return props.renderJob.progress + (1 / (props.renderJob.renderItem.endFrame - props.renderJob.renderItem.startFrame + 1));
     };
 
 
@@ -104,7 +100,7 @@ const InfosContainer: React.FC<InfosContainerProps> = (props) => {
                                         {props.renderJob.running
                                             ? <IonRow>
                                                 {((props.renderJob.renderItem.endFrame - props.renderJob.renderItem.startFrame > 1))
-                                                    ? <IonProgressBar className='main-progress' buffer={getBuffer()} value={getProgress()} ></IonProgressBar>
+                                                    ? <IonProgressBar className='main-progress' buffer={getBuffer()} value={props.renderJob.progress} ></IonProgressBar>
                                                     : <IonProgressBar className='main-progress' type={(props.renderJob.isFrameInitializing && !props.renderJob.paused && props.renderJob.running) ? 'indeterminate' : 'determinate'} value={(props.renderJob.isFrameInitializing && props.renderJob.paused) ? 0.5 : props.renderJob.currentFrameProgress} ></IonProgressBar>
                                                 }
                                             </IonRow>

@@ -90,7 +90,9 @@ export class RenderJob {
     public lastFrameFilePath: string = "";
     public lastFrameTime: number = 0;
 
+    public progress: number = 0;
     public startTime: number = 0;
+    public pausedTime: number = 0;
     public elapsedTime: number = 0;
     public remainingTime: number = 0;
     public currentFrameInitialRemainingTime: number = -1;
@@ -125,6 +127,8 @@ export class RenderJob {
 
         //If electron not started, return fake data
         try {
+            //@ts-ignore
+            window.electronAPI.invoke('SetProgress', 2); //Value > 1 means progress is indeterminate
             //@ts-ignore
             window.electronAPI.onRenderUpdate((event, data) => {
                 lines = this.parseLines(data as string);
@@ -194,6 +198,8 @@ export class RenderJob {
         }
         if (!this.stoped)
             this.onClose(code);
+        //@ts-ignore
+        window.electronAPI.invoke('SetProgress', -1);
     }
 
     public stopRender() {
@@ -207,12 +213,15 @@ export class RenderJob {
         try { window.electronAPI.invoke('StopRender', {}); } catch { }
     }
     public pauseRender() {
+        this.pausedTime = Date.now();
         this.paused = true;
         this.renderItem.status = RenderItemData.STATUS_PAUSED;
         //@ts-ignore
         try { window.electronAPI.invoke('PauseRender', {}); } catch { }
     }
     public resumeRender() {
+        this.startTime = this.startTime + (Date.now() - this.pausedTime);
+        this.updateTime();
         this.paused = false;
         this.renderItem.status = RenderItemData.STATUS_RENDERING;
         //@ts-ignore
@@ -248,7 +257,7 @@ export class RenderJob {
             regex = /Remaining:(?<minutes>\d*)\:(?<seconds>\d*)\.(?<hundredth>\d*)\s\|/;
             matches = line.match(regex);
             if (matches && matches.groups) {
-                this.currentFrameRemainingTime = this.computeTime(matches.groups.minutes, matches.groups.seconds, matches.groups.hundredth);
+                this.currentFrameRemainingTime = this.computeTimeValues(matches.groups.minutes, matches.groups.seconds, matches.groups.hundredth);
                 if (this.currentFrameInitialRemainingTime === -1)
                     this.currentFrameInitialRemainingTime = this.currentFrameRemainingTime;
 
@@ -283,10 +292,17 @@ export class RenderJob {
             regex = /Time:\s(?<minutes>\d*)\:(?<seconds>\d*)\.(?<hundredth>\d*)\s\(Saving/;
             matches = line.match(regex);
             if (matches && matches.groups)
-                this.lastFrameTime = this.computeTime(matches.groups.minutes, matches.groups.seconds, matches.groups.hundredth);
+                this.lastFrameTime = this.computeTimeValues(matches.groups.minutes, matches.groups.seconds, matches.groups.hundredth);
 
-            this.remainingTime = (this.renderItem.endFrame - this.frame) * this.lastFrameTime;
-            this.elapsedTime = Date.now() - this.startTime;
+
+
+            this.updateTime();
+
+            this.progress = (this.frame - this.renderItem.startFrame) / (this.renderItem.endFrame - this.renderItem.startFrame + 1);
+            if (this.progress > 0) {
+                //@ts-ignore
+                window.electronAPI.invoke('SetProgress', this.progress);
+            }
 
             this.onUpdate();
         } catch (error) {
@@ -294,7 +310,12 @@ export class RenderJob {
         }
     }
 
-    private computeTime(minutes: string, seconds: string, hundredth: string) {
+    private updateTime() {
+        this.remainingTime = (this.renderItem.endFrame - this.frame) * this.lastFrameTime;
+        this.elapsedTime = Date.now() - this.startTime;
+    }
+
+    private computeTimeValues(minutes: string, seconds: string, hundredth: string) {
         let time = 0;
         time += (parseInt(minutes) * 60);
         time += (parseInt(seconds));
