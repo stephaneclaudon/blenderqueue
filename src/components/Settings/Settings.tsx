@@ -36,7 +36,6 @@ const Settings: React.FC<SettingsProps> = (props) => {
     const blenderExeInputFile = useRef<HTMLInputElement>(null);
 
     const inputProgress = useRef<HTMLIonInputElement>(null);
-    const progressInputFile = useRef<HTMLInputElement>(null);
 
     const modal = useRef<HTMLIonModalElement>(null);
 

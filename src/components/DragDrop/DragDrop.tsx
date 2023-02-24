@@ -1,8 +1,4 @@
-import { IonCol, IonGrid, IonRow } from '@ionic/react';
 import React, { useEffect, useState } from 'react';
-import { RenderItemData } from '../../data/RenderItemData';
-
-//import './RenderTooltip.css';
 
 export interface DragDropProps {
     onDrop: Function

@@ -1,10 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { IonContent, IonHeader, IonPage, IonToolbar, IonList, IonButton, IonIcon, IonGrid, IonRow, IonCol, IonImg, useIonAlert, IonReorderGroup, ItemReorderEventDetail, IonReorder, IonItem, setupIonicReact } from '@ionic/react';
+import React, { useEffect, useState } from 'react';
+import { IonContent, IonHeader, IonPage, IonToolbar, IonList, IonButton, IonIcon, IonGrid, IonRow, IonCol, IonImg, useIonAlert, IonReorderGroup, ItemReorderEventDetail } from '@ionic/react';
 import RenderItem from '../components/RenderItem/RenderItem';
 import InfosContainer from '../components/Infos/InfosContainer';
 import { RenderItemData } from '../data/RenderItemData';
-import { subscribe, unsubscribe } from '../events/events';
-import { GetData, RenderJob } from '../services/services';
+import { RenderJob } from '../services/services';
 import { cog, pause, play, playOutline, stopSharp } from 'ionicons/icons';
 
 import { useHotkeys } from 'react-hotkeys-hook'
@@ -13,7 +12,7 @@ import { isHotkeyPressed } from 'react-hotkeys-hook'
 import './Home.css';
 import Settings from '../components/Settings/Settings';
 import DragDrop from '../components/DragDrop/DragDrop';
-import { BlenderQueueData, BlenderQueueSettings } from '../data/SettingsData';
+import { BlenderQueueData } from '../data/SettingsData';
 
 
 let canRender: boolean = false;
@@ -27,7 +26,6 @@ const Home: React.FC = () => {
 
   const [renderItems, setRenderItems] = useState(new Array<RenderItemData>());
   const [currentRenderId, setCurrentRenderId] = useState(-1);
-  const [paused, setPaused] = useState(false);
   const [errorAlert] = useIonAlert();
 
   const onFilesDroped = (files: FileList) => {
@@ -92,7 +90,6 @@ const Home: React.FC = () => {
   }
 
   const onRenderStop = () => {
-    setPaused(false);
     setCurrentRenderId(-1);
     setRenderItems([...renderItems]);
   };
@@ -286,7 +283,6 @@ const Home: React.FC = () => {
 
                 {(renderJob && renderJob.running && !renderJob.paused) &&
                   <IonButton onClick={() => {
-                    setPaused(true);
                     renderJob.pauseRender();
                   }} color="primary">
                     <IonIcon icon={pause}></IonIcon>
@@ -295,7 +291,6 @@ const Home: React.FC = () => {
                 }
                 {(renderJob && renderJob.paused) &&
                   <IonButton onClick={() => {
-                    setPaused(false);
                     renderJob.resumeRender();
                   }} color="warning">
                     <IonIcon icon={play}></IonIcon>

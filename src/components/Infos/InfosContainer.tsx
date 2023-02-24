@@ -4,7 +4,6 @@ import { IonCol, IonGrid, IonRow, IonProgressBar, IonLabel, IonSegment, IonSegme
 import './InfosContainer.css';
 import { RenderJob } from '../../services/services';
 import * as Utils from '../../utils/utils';
-import { RenderItemData } from '../../data/RenderItemData';
 
 interface InfosContainerProps {
     renderJob: RenderJob
@@ -82,12 +81,12 @@ const InfosContainer: React.FC<InfosContainerProps> = (props) => {
 
                         <IonGrid>
                             <IonRow>
-                                <IonCol size="9" class="ion-align-items-start">
+                                <IonCol size="9" class="ion-align-items-start" id="progress-infos">
                                     <IonGrid className='progress-info'>
                                         <IonRow>
                                             {props.renderJob.running
-                                                ? <span>Rendering {props.renderJob.renderItem.blendFileName} ({props.renderJob.renderItem.sceneName})</span>
-                                                : <span>&nbsp;</span>
+                                                ? <span>Rendering: {props.renderJob.renderItem.blendFileName} ({props.renderJob.renderItem.sceneName})</span>
+                                                : <span>Rendering: </span>
                                             }
                                         </IonRow>
 
@@ -122,28 +121,31 @@ const InfosContainer: React.FC<InfosContainerProps> = (props) => {
                                         </IonRow>
 
 
-                                        <IonRow className="output-line">{Utils.stripString(props.renderJob.outputStringLastLine, 145)}</IonRow>
+                                        <IonRow className="output-line">{
+                                            (props.renderJob.outputStringLastLine !== '')
+                                                ? Utils.stripString(props.renderJob.outputStringLastLine, 145)
+                                                : 'Status: waiting for render job.'
+                                        }</IonRow>
 
 
                                     </IonGrid>
                                 </IonCol>
 
-                                <IonCol size="3">
-                                    <img src={
-                                        (props.renderJob.lastFrameFilePath !== '')
-                                            ? props.renderJob.lastFrameFilePath
-                                            : '/assets/img/default-preview.jpg'
-                                    }
-                                        alt="Last frame preview" />
+                                <IonCol size="3" id='preview-image'>
+                                    <div style={{
+                                        backgroundImage: `url(${(props.renderJob.lastFrameFilePath !== '')
+                                                ? props.renderJob.lastFrameFilePath
+                                                : '/assets/img/default-preview.jpg'
+                                            })`
+                                    }}></div>
                                 </IonCol>
                             </IonRow>
-
                         </IonGrid>
                     </div>
                     :
                     <div id='log' ref={logDiv}>
                         <p>
-                            {props.renderJob.outputString}
+                            {(props.renderJob.outputString !== '') ? props.renderJob.outputString : 'Status: waiting for render job.'}
                         </p>
                     </div>
                 }

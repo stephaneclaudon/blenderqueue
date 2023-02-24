@@ -247,7 +247,7 @@ export class RenderJob {
 
             if (matches && matches.groups) {
                 let f = parseInt(matches.groups.frame);
-                if (f != this.frame) {
+                if (f !== this.frame) {
                     this.frame = parseInt(matches.groups.frame);
                     this.currentFrameInitialRemainingTime = -1;
                 }

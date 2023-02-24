@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { timeOutline, trashOutline, alertCircleOutline, checkmarkCircleOutline, cogOutline, pauseOutline, pause, refreshOutline, chevronForward } from 'ionicons/icons';
-import { IonCol, IonGrid, IonInput, IonRow, IonToggle, IonProgressBar, IonLabel, IonSelect, IonSelectOption, IonIcon, IonPopover, IonContent, IonItem, IonNote, IonReorder } from '@ionic/react';
+import React from 'react';
+import {  trashOutline, alertCircleOutline, checkmarkCircleOutline, cogOutline, pause, refreshOutline, chevronForward } from 'ionicons/icons';
+import { IonCol, IonGrid, IonInput, IonRow, IonToggle, IonProgressBar, IonLabel, IonSelect, IonSelectOption, IonIcon,  IonItem, IonReorder } from '@ionic/react';
 import { RenderItemData } from '../../data/RenderItemData';
 import * as Services from '../../services/services';
 
@@ -76,15 +76,18 @@ const RenderItem: React.FC<RenderItemProps> = (props) => {
               <IonLabel>{props.data.blendFileName}</IonLabel>
             </IonCol>
             <IonCol size="2" class="ion-justify-content-start">
-              <IonSelect
-                disabled={(props.data.isDone || props.data.isRendering || props.data.hasFailed)}
-                placeholder="Scene"
-                onIonChange={(event) => props.onSceneChange(event.target.value)}
-                value={props.data.scene}>
-                {!props.data.isInitializing && props.data.blendFileData.sceneNames.map((sceneName, index) =>
-                  <IonSelectOption key={index} value={sceneName}>{sceneName}</IonSelectOption>
-                )}
-              </IonSelect>
+              <IonItem>
+                <IonSelect
+                  disabled={(props.data.isDone || props.data.isRendering || props.data.hasFailed)}
+                  placeholder="Scene"
+                  interface="popover"
+                  onIonChange={(event) => props.onSceneChange(event.target.value)}
+                  value={props.data.scene}>
+                  {!props.data.isInitializing && props.data.blendFileData.sceneNames.map((sceneName, index) =>
+                    <IonSelectOption key={index} value={sceneName}>{sceneName}</IonSelectOption>
+                  )}
+                </IonSelect>
+              </IonItem>
             </IonCol>
             <IonCol size="2">
               <IonItem
@@ -130,7 +133,7 @@ const RenderItem: React.FC<RenderItemProps> = (props) => {
               <IonCol size='2' class="ion-justify-content-start">{props.data.sceneData.resolution_x}x{props.data.sceneData.resolution_y}px</IonCol>
               <IonCol size='1' class="ion-justify-content-start">{props.data.sceneData.file_format}</IonCol>
               <IonCol size='1' class="ion-justify-content-start">{props.data.sceneData.film_transparent ? 'Alpha' : 'No alpha'}</IonCol>
-              <IonCol size='6' class="ion-justify-content-start">&nbsp;<a onClick={() => Services.OpenFolder(props.data.sceneData.filepath)} href="#">{Utils.strippedPath(props.data.sceneData.filepath)}</a></IonCol>
+              <IonCol size='6' class="ion-justify-content-start">&nbsp;<a onClick={() => Services.OpenFolder(props.data.sceneData.filepath)} href="#1">{Utils.strippedPath(props.data.sceneData.filepath)}</a></IonCol>
             </IonRow>
           }
 

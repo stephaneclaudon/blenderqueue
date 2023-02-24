@@ -1,6 +1,6 @@
 #InfosContainer {
 
-    height: 350px;
+    height: 280px;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
@@ -13,6 +13,11 @@
 
     color: var(--ion-color-step-600);
     font-weight: bold;
+}
+
+#InfosContainer #progress-infos,
+#InfosContainer #preview-image {
+    padding: 0;
 }
 
 #InfosContainer ion-segment {
@@ -39,7 +44,7 @@
 }
 
 #InfosContainer .progress-info .progress-values {
-    margin-bottom: 2em;
+    margin-bottom: 1.8em;
 }
 
 #InfosContainer .progress-info .important-value {
@@ -52,12 +57,16 @@
 }
 
 #InfosContainer .progress-info .output-line {
-    font-size: 0.65em;
+    font-size: 0.8em;
     font-weight: normal;
     text-align: left;
+    border-top: solid 1px var(--ion-color-step-200);
+    padding-top: 10px;
+    padding-bottom: 0;
 }
 
-#InfosContainer.waiting ion-progress-bar.main-progress::part(track), #InfosContainer.waiting ion-progress-bar::part(progress) {
+#InfosContainer.waiting ion-progress-bar.main-progress::part(track),
+#InfosContainer.waiting ion-progress-bar::part(progress) {
     background: var(--ion-color-step-100);
 }
 
@@ -73,6 +82,7 @@
     background-image: linear-gradient(90deg, var(--buffer-background) 0%, var(--buffer-background) 30%, transparent 30%);
     background-size: 0.4em 1em;
 }
+
 #InfosContainer.paused ion-progress-bar.main-progress::part(stream),
 #InfosContainer.paused ion-progress-bar::part(track) {
     animation: none;
@@ -87,9 +97,17 @@
 
 }
 
-#InfosContainer #progress > ion-grid {
+#InfosContainer #progress>ion-grid {
     flex-grow: 1;
     padding: 0;
+}
+
+#InfosContainer #progress #preview-image>div {
+    width: 100%;
+    height: 100%;
+    background-position: center;
+    background-size: contain;
+    background-repeat: no-repeat;
 }
 
 #InfosContainer #log {
