@@ -273,11 +273,31 @@ ipcMain.handle('ShowOpenDialog', async (event, filepath: string) => {
   return dialog.showOpenDialog(myCapacitorApp.getMainWindow(), { properties: ['openDirectory'] })
 });
 
+ipcMain.handle('ShowSaveDialog', async (event, filepath: string) => {
+  return dialog.showSaveDialog(myCapacitorApp.getMainWindow(), { defaultPath: filepath, properties: ['createDirectory'] })
+});
+
+ipcMain.handle('CheckOutputFolder', async (event, filepath: string) => {
+  filepath = path.normalize(filepath);
+  let isAFolder = (filepath.charAt(filepath.length - 1) === path.sep);
+
+  if (!isAFolder)
+    filepath = path.dirname(filepath);
+
+
+  console.log(filepath, fs.existsSync(filepath));
+  
+
+  return fs.existsSync(filepath);
+});
+
 ipcMain.handle('ShowItemInFolder', async (event, filepath: string) => {
   let folder = path.normalize(filepath);
   try {
     if (!fs.statSync(folder).isDirectory()) {
       folder = path.dirname(folder);
+    } else {
+      return null;
     }
   } catch (err) {
     folder = path.dirname(folder);
@@ -291,7 +311,7 @@ ipcMain.handle('GetData', async (event) => {
 });
 
 ipcMain.handle('SaveData', async (event, data: Object) => {
-  console.log("Index::SaveData()", data);
+  console.log("Index::SaveData()");
   return dataManager.SaveData(data as BlenderQueueData)
 });
 

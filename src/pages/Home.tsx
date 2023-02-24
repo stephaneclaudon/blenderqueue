@@ -21,6 +21,7 @@ let renderJob = new RenderJob();
 const Home: React.FC = () => {
 
   const [init, setInit] = useState(true);
+  const [paused, setPaused] = useState(false);
 
   const openSettingsBtn = React.useRef<HTMLIonIconElement>(null);
 
@@ -35,7 +36,7 @@ const Home: React.FC = () => {
       let renderItem: RenderItemData = new RenderItemData();
       renderItem.init(file, () => {
         onRenderItemChange(renderItem);
-      }, (error:string) => {
+      }, (error: string) => {
         errorAlert({
           header: 'Error',
           subHeader: 'Get infos from blend file',
@@ -65,7 +66,7 @@ const Home: React.FC = () => {
   const refreshItem = (item: RenderItemData) => {
     item.reset(() => {
       onRenderItemChange(item);
-    }, (error:string) => {
+    }, (error: string) => {
       errorAlert({
         header: 'Error',
         subHeader: 'Get infos from blend file',
@@ -84,7 +85,9 @@ const Home: React.FC = () => {
 
 
   const startRender = (renderId: number) => {
+    console.log("startRender()", renderId);
     renderJob.init(renderItems[renderId]);
+    renderItems[renderId].selected = false;
     renderJob.start();
     setRenderItems([...renderItems]);
   }
@@ -106,7 +109,6 @@ const Home: React.FC = () => {
   };
 
   const onRenderError = (error: string) => {
-    onRenderClose(0);
     errorAlert({
       header: 'Render Error',
       subHeader: 'Blender renderer has failed',
@@ -173,7 +175,13 @@ const Home: React.FC = () => {
   };
 
   const deleteSelectedItems = () => {
-    let newItems = renderItems.filter((item: RenderItemData) => (!item.selected || item.isRendering || item.isPaused));
+    console.log("delete");
+
+    let newItems = renderItems.filter((item: RenderItemData) => {
+      console.log(item);
+
+      return !item.selected
+    });
     setRenderItems([...newItems]);
   };
 
@@ -283,6 +291,7 @@ const Home: React.FC = () => {
 
                 {(renderJob && renderJob.running && !renderJob.paused) &&
                   <IonButton onClick={() => {
+                    setPaused(true);
                     renderJob.pauseRender();
                   }} color="primary">
                     <IonIcon icon={pause}></IonIcon>
@@ -291,6 +300,7 @@ const Home: React.FC = () => {
                 }
                 {(renderJob && renderJob.paused) &&
                   <IonButton onClick={() => {
+                    setPaused(false);
                     renderJob.resumeRender();
                   }} color="warning">
                     <IonIcon icon={play}></IonIcon>
@@ -339,7 +349,13 @@ const Home: React.FC = () => {
                     onRenderItemChange(renderItem);
                   }}
                   onSceneChange={(sceneName: string) => {
-                    renderItem.scene = sceneName;
+                    renderItem.selectScene(sceneName).then(() => {
+                      onRenderItemChange(renderItem);
+                    });
+                  }}
+                  onOutputFileChange={(filePath: string) => {
+                    renderItem.outputFilePath = filePath;
+                    renderItem.outputFilePathExists = true;
                     onRenderItemChange(renderItem);
                   }}
                   onStartFrameChange={(frame: number) => {

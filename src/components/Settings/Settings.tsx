@@ -86,8 +86,8 @@ const Settings: React.FC<SettingsProps> = (props) => {
         setAppSettings({ ...appSettings });
         Services.SaveData(appSettings).then(() => {
             props.onSettingsUpdated();
-        }).catch(() => {
-            console.log("Settings.tsx, failed to save session");
+        }).catch((error) => {
+            console.log("Settings.tsx, failed to save session.", error);
         });
     }
 
@@ -99,7 +99,6 @@ const Settings: React.FC<SettingsProps> = (props) => {
 
     useEffect(() => {
         if (settingsLoaded) {
-            console.log("Settings save session");
             appSettings.session = props.session;
             saveData();
         }

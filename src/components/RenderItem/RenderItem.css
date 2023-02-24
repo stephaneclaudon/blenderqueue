@@ -47,6 +47,10 @@ ion-col {
   pointer-events: none;
 }
 
+.renderItem .busy ion-col > *{
+  pointer-events: none;
+}
+
 .renderItem .disabled ion-col ion-toggle {
   opacity: 1 !important;
   pointer-events: auto !important;
@@ -154,4 +158,8 @@ ion-col>* {
 
 .info a:hover {
   text-decoration: underline;
+}
+
+.info a.warning {
+  color: var(--ion-color-warning);
 }

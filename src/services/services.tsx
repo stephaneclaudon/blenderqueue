@@ -183,16 +183,15 @@ export class RenderJob {
     }
 
     public onRenderError(error: string) {
-        console.error("Render encountered an error ", error);
-        this.stoped = true;
-        this.running = false;
-        this.paused = false;
+        console.error("Render encountered an error ", error);        
         this.renderItem.status = RenderItemData.STATUS_ERROR;
         this.onError(error);
     }
 
     public onRenderClose(code: number) {
         console.log("RenderJob::onRenderClose()");
+        this.running = false;
+        this.paused = false;
         if (!this.renderItem.hasFailed) {
             this.renderItem.status = RenderItemData.STATUS_DONE;
         }
@@ -330,6 +329,24 @@ export class RenderJob {
     }
 }
 
+export const ShowSaveDialog = (path: string) => {
+    return new Promise(function (resolve, reject) {
+        //If electron not started, return fake data
+        try {
+            //@ts-ignore
+            window.electronAPI.invoke(
+                'ShowSaveDialog', path).then(function (res: any) {
+                    resolve(res);
+                }).catch(function (err: any) {
+                    reject(err);
+                });
+        } catch (error) {
+            console.warn('ShowSaveDialog(), electron not started, can\'t open dialog');
+            resolve({filePath: "/Fake/Folder/path"});
+        }
+    });
+}
+
 export const OpenFolder = (path: string) => {
     return new Promise(function (resolve, reject) {
         //If electron not started, return fake data
@@ -342,7 +359,7 @@ export const OpenFolder = (path: string) => {
                     reject(err);
                 });
         } catch (error) {
-            console.warn('OpenFolder(), electron not started, can\'t open folder');
+            console.warn('OpenFolder(), electron not started, can\'t open dialog');
             resolve({});
         }
     });
@@ -358,5 +375,16 @@ export const BrowseFolder = () => {
         console.warn('BrowseFolder(), electron not started, can\'t open folder');
         return undefined;
     }
+}
 
+export const CheckOutputFolder = (path: string) => {
+    //If electron not started, return fake data
+    try {
+        //@ts-ignore
+        return window.electronAPI.invoke('CheckOutputFolder', path);
+    }
+    catch (error) {
+        console.warn('CheckOutputFolder(), electron not started, can\'t check returning true...');
+        return false;
+    }
 }

@@ -1,5 +1,8 @@
 
 var spawn = require("child_process").spawn;
+var path = require("path");
+var fs = require("fs");
+
 
 let arg = {
   "blendPath": '/Applications/Blender.app/Contents/MacOS/Blender',
@@ -81,13 +84,28 @@ const Render = async () => {
 };
 
 
+const CheckOutputFolder = (filepath) => {
+  filepath = path.normalize(filepath);
+  let isAFolder = (filepath.charAt(filepath.length - 1) === path.sep);
 
+  console.log("Checking", filepath.charAt(filepath.length - 1), path.sep);
+  if (!isAFolder)
+    filepath = path.dirname(filepath);
+
+  console.log(filepath);
+  return fs.existsSync(filepath);
+};
+
+
+
+console.log(CheckOutputFolder('/Users/stephane/Dropbox/Kinetic_movie/Blender/2_Output/Film-1/mama/'));
+/*
 Render().then((data) => {
   console.error(data);
 }).catch((err) => {
   console.error(err);
 });
-/*
+
 BlenderExtract().then((data) => {
   console.error(data);
 }).catch((err) => {

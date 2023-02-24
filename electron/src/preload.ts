@@ -7,9 +7,9 @@ import { contextBridge, ipcRenderer } from 'electron';
 contextBridge.exposeInMainWorld(
     "electronAPI", {
     invoke: (channel, data: Object) => {
-        console.log("-----------------");
-        console.log("Invoking", channel);
-        console.log("-----------------");
+        //console.log("-----------------");
+        //console.log("Invoking", channel);
+        //console.log("-----------------");
         let validChannels = [
             "BlenderExtract",
             "Render",
@@ -21,7 +21,9 @@ contextBridge.exposeInMainWorld(
             "SaveData",
             "ShowItemInFolder",
             "ShowOpenDialog",
-            "SetProgress"
+            "SetProgress",
+            "CheckOutputFolder",
+            "ShowSaveDialog"
         ];
         if (validChannels.includes(channel)) {
             return ipcRenderer.invoke(channel, data);

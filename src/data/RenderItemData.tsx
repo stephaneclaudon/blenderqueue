@@ -18,6 +18,8 @@ export class RenderItemData {
   public sceneData: BlenderExtractSceneData = new BlenderExtractSceneData();
   public startFrame: number = 0;
   public endFrame: number = 0;
+  public outputFilePath: string = '';
+  public outputFilePathExists: boolean = false;
   public status: string = RenderItemData.STATUS_PENDING;
   public commandArgs: Array<string> = [];
   public uuid: string = "";
@@ -52,10 +54,11 @@ export class RenderItemData {
     Services.GetBlenderFileInfo(this.blendFilePath)
       .then((dataObject: BlenderExtractData) => {
         this.blendFileData = dataObject;
-        this.scene = this.blendFileData.scenes[0].name;
-        this.status = RenderItemData.STATUS_PENDING;
-        if (onSuccess)
-          onSuccess();
+        this.selectScene(this.blendFileData.scenes[0].name).finally(() => {
+          this.status = RenderItemData.STATUS_PENDING;
+          if (onSuccess)
+            onSuccess();
+        });
       })
       .catch((error: any) => {
         this.status = RenderItemData.STATUS_ERROR;
@@ -65,14 +68,22 @@ export class RenderItemData {
   }
 
   public selectScene(sceneName: string) {
-    this.sceneData = this.blendFileData.getScene(sceneName);
-    this.startFrame = this.sceneData.start;
-    this.endFrame = this.sceneData.end;
-  }
-
-  public set scene(name: string) {
-    this.sceneName = name;
-    this.selectScene(name);
+    return new Promise((resolve, reject) => {
+      this.sceneName = sceneName;
+      this.sceneData = this.blendFileData.getScene(sceneName);
+      this.startFrame = this.sceneData.start;
+      this.endFrame = this.sceneData.end;
+      this.outputFilePath = this.sceneData.filepath;
+  
+      Services.CheckOutputFolder(this.outputFilePath).then((exists: boolean) => {
+        this.outputFilePathExists = exists;
+        this.expanded = !this.outputFilePathExists;
+        resolve(true);
+      }).catch((error:any) => {
+        reject(error);
+      });
+    });
+    
   }
 
   public get scene() {
@@ -114,6 +125,7 @@ export class RenderItemData {
       "-S", this.scene,
       "-s", this.startFrame.toString(),
       "-e", this.endFrame.toString(),
+      "-o", this.outputFilePath.toString(),
       "-a"
     ];
   };
