@@ -1,7 +1,7 @@
 {
-  "name": "BlenderQueue",
+  "name": "blenderrenderqueue",
   "version": "1.0.0",
-  "description": "An Amazing Capacitor App",
+  "description": "Standalone render queue for Blender",
   "author": {
     "name": "",
     "email": ""

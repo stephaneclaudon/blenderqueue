@@ -1,5 +1,5 @@
 {
-  "name": "BlenderQueue",
+  "name": "Blender Render Queue",
   "integrations": {
     "capacitor": {}
   },

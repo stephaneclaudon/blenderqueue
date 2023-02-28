@@ -284,10 +284,6 @@ ipcMain.handle('CheckOutputFolder', async (event, filepath: string) => {
   if (!isAFolder)
     filepath = path.dirname(filepath);
 
-
-  console.log(filepath, fs.existsSync(filepath));
-  
-
   return fs.existsSync(filepath);
 });
 
@@ -322,7 +318,7 @@ const startSavingProgressInfos = () => {
       if (dataManager.data.settings.saveProgressInfosGUI) {
         try {
           myCapacitorApp.getMainWindow().webContents.capturePage().then(image => {
-            fs.writeFile(path.join(dataManager.data.settings.saveProgressInfosPath, '_Blender Queue -- Progress.png'), image.toPNG(), (err) => {
+            fs.writeFile(path.join(dataManager.data.settings.saveProgressInfosPath, '_Blender Progress.png'), image.toPNG(), (err) => {
               if (err) throw err
             })
           });
@@ -332,7 +328,7 @@ const startSavingProgressInfos = () => {
 
 
       if (dataManager.data.settings.saveProgressInfosTxt) {
-        try { fs.writeFileSync(path.join(dataManager.data.settings.saveProgressInfosPath, '_Blender Queue -- log.txt'), renderOutput, 'utf-8'); }
+        try { fs.writeFileSync(path.join(dataManager.data.settings.saveProgressInfosPath, '_Blender Log.txt'), renderOutput, 'utf-8'); }
         catch (e) { console.error('Failed to save log file !'); console.log(e); }
       }
 
