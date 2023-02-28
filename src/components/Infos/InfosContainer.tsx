@@ -133,10 +133,10 @@ const InfosContainer: React.FC<InfosContainerProps> = (props) => {
 
                                 <IonCol size="3" id='preview-image'>
                                     <div style={{
-                                        backgroundImage: `url(${(props.renderJob.lastFrameFilePath !== '')
-                                                ? props.renderJob.lastFrameFilePath
-                                                : '/assets/img/default-preview.jpg'
-                                            })`
+                                        backgroundImage: `url(${(props.renderJob.lastFrameImageData !== '')
+                                        ? props.renderJob.lastFrameImageData
+                                        : '/assets/img/default-preview.jpg'
+                                    })`
                                     }}></div>
                                 </IonCol>
                             </IonRow>

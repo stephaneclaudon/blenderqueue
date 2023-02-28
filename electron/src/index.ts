@@ -149,12 +149,11 @@ dataManager.init().then((response: string) => {
 });
 
 
-const tmpFolderPath = path.join(app.getAppPath(), 'app', 'tmp');
+
 const resourcePath = app.isPackaged
   ? process.resourcesPath
   : app.getAppPath();
 const blenderExtractScriptsPath = path.join(resourcePath, 'assets', 'blender', 'BlenderExtract.py');
-
 
 ipcMain.handle('BlenderExtract', async (event, arg: Object) => {
   let blenderBinary = dataManager.data.settings.blenderBinaryPath;
@@ -208,20 +207,10 @@ ipcMain.handle('BlenderExtract', async (event, arg: Object) => {
   });
 });
 
-ipcMain.handle('SavePreview', async (event, arg: Object) => {
-  return new Promise(function (resolve, reject) {
-    let previewAbsolutePath = path.join(tmpFolderPath, 'renderPreview.png');
-    let previewWebPath = path.join('tmp', 'renderPreview.png');
-    try {
-      copyFile(arg['filePath'], previewAbsolutePath).then(() => {
-        resolve(previewWebPath);
-      }).catch((error) => {
-        reject(error);
-      });
-    } catch (error) {
-      reject(error);
-    }
-  });
+ipcMain.handle('GetPreview', async (event, arg: Object) => {
+  const buf = await fs.promises.readFile(arg['filePath']);
+  const dataBase64 = Buffer.from(buf).toString('base64');
+  return dataBase64;
 });
 
 

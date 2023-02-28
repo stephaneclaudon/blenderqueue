@@ -16,7 +16,7 @@ contextBridge.exposeInMainWorld(
             "StopRender",
             "PauseRender",
             "ResumeRender",
-            "SavePreview",
+            "GetPreview",
             "GetData",
             "SaveData",
             "ShowItemInFolder",

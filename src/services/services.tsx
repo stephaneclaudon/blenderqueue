@@ -91,7 +91,7 @@ export class RenderJob {
     public currentSamples: number = 0;
     public totalSamples: number = 0;
 
-    public lastFrameFilePath: string = "";
+    public lastFrameImageData: string = "";
     public lastFrameTime: number = 0;
 
     public progress: number = 0;
@@ -310,16 +310,22 @@ export class RenderJob {
             if (matches && matches.groups)
                 this.lastFrameTime = this.computeTimeValues(matches.groups.minutes, matches.groups.seconds, matches.groups.hundredth);
 
+            
+                
             //Parsing last frame file path
             regex = /Saved:\s\'(?<lastFrameFilePath>.*)\'/;
             matches = line.match(regex);
             if (matches && matches.groups) {
                 if (this.renderItem.sceneData.engine === ENGINE_WORKBENCH)
                     this.frame++;
+                
+                    console.log("this.canPreviewFile", this.canPreviewFile);
                 if (this.canPreviewFile) {
                     //@ts-ignore
-                    window.electronAPI.invoke('SavePreview', { 'filePath': matches.groups.lastFrameFilePath }).then((previewFilePath: string) => {
-                        this.lastFrameFilePath = previewFilePath + '?' + Math.random().toString();
+                    window.electronAPI.invoke('GetPreview', { 'filePath': matches.groups.lastFrameFilePath }).then((dataBase64: string) => {
+                        this.lastFrameImageData = 'data:image/' + this.renderItem.sceneData.file_format.toLowerCase() + ';base64,' + dataBase64;
+                    }).catch((error:any) => {
+                        console.warn(error);
                     });
                 }
             }
