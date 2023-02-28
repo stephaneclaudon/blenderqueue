@@ -57,7 +57,7 @@ const InfosContainer: React.FC<InfosContainerProps> = (props) => {
     useEffect(() => {
         const interval = setInterval(() => {
             setTime(new Date());
-        }, 200);
+        }, 1000);
 
         return () => {
             clearInterval(interval)

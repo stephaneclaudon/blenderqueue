@@ -3,6 +3,9 @@ import { RenderItemData } from "../data/RenderItemData";
 import { BlenderQueueData } from "../data/SettingsData";
 import { mockoutput } from './data-mock/blender-output-cycles';
 
+export const ENGINE_CYCLES = 'CYCLES';
+export const ENGINE_EEVEE = 'BLENDER_EEVEE';
+
 export const GetData = () => {
     return new Promise<BlenderQueueData>(function (resolve, reject) {
         //If electron not started, return fake data
@@ -95,9 +98,9 @@ export class RenderJob {
     public pausedTime: number = 0;
     public elapsedTime: number = 0;
     public remainingTime: number = 0;
-    public currentFrameInitialRemainingTime: number = -1;
     public currentFrameRemainingTime: number = 0;
-    public currentFrameProgress: number = 0;
+    public currentFrameTime: number = 0;
+    public currentFrameProgress: number = -1;
 
     public running: boolean = false;
     public paused: boolean = false;
@@ -184,7 +187,7 @@ export class RenderJob {
     }
 
     public onRenderError(error: string) {
-        console.error("Render encountered an error ", error);        
+        console.error("Render encountered an error ", error);
         this.renderItem.status = RenderItemData.STATUS_ERROR;
         this.onError(error);
     }
@@ -242,38 +245,67 @@ export class RenderJob {
             let matches;
 
             //Parsing frame number
-            regex = /Fra:(?<frame>\d*)\s/;
+            regex = /Fra:(?<frame>\d*).*Time:(?<minutes>\d*)\:(?<seconds>\d*)\.(?<hundredth>\d*)\s/;
             matches = line.match(regex);
 
             if (matches && matches.groups) {
                 let f = parseInt(matches.groups.frame);
                 if (f !== this.frame) {
-                    this.frame = parseInt(matches.groups.frame);
-                    this.currentFrameInitialRemainingTime = -1;
+                    //Entering new frame render...
                 }
+                this.frame = f;
+                this.currentFrameTime = this.computeTimeValues(matches.groups.minutes, matches.groups.seconds, matches.groups.hundredth);
             }
+
+
+            //Parsing time values
+            regex = /Fra:(?<frame>\d*).*Time:(?<minutes>\d*)\:(?<seconds>\d*)\.(?<hundredth>\d*)\s/;
+            matches = line.match(regex);
+            if (matches && matches.groups)
+                
+
+
 
             //Parsing currentFrame remaining time
             regex = /Remaining:(?<minutes>\d*)\:(?<seconds>\d*)\.(?<hundredth>\d*)\s\|/;
             matches = line.match(regex);
             if (matches && matches.groups) {
                 this.currentFrameRemainingTime = this.computeTimeValues(matches.groups.minutes, matches.groups.seconds, matches.groups.hundredth);
-                if (this.currentFrameInitialRemainingTime === -1)
-                    this.currentFrameInitialRemainingTime = this.currentFrameRemainingTime;
-
-                this.currentFrameProgress = (this.currentFrameInitialRemainingTime - this.currentFrameRemainingTime) / this.currentFrameInitialRemainingTime;
+                this.currentFrameProgress = this.currentFrameTime / (this.currentFrameRemainingTime + this.currentFrameTime);
             }
 
+            /*
+            //Parsing current rendering tiles information
+            if (this.renderItem.sceneData.engine === ENGINE_CYCLES) {
+                regex = /Fra:(?<frame>\d*).*Rendered\s(?<currentTile>\d*)\/(?<totalTiles>\d*)\sTiles/;
+                matches = line.match(regex);
+        
+                if (matches && matches.groups) {
+                    this.currentTile = parseInt(matches.groups.currentTile);
+                    this.totalTiles = parseInt(matches.groups.totalTiles);
+                }
+            }
+            */
 
             //Parsing current rendering frame evolution
-            regex = /Fra:(?<frame>\d*).*Sample\s(?<currentSamples>\d*)\/(?<totalSamples>\d*)/;
-            matches = line.match(regex);
+            if (this.renderItem.sceneData.engine !== ENGINE_CYCLES) {
+                //regex = /Fra:(?<frame>\d*).*Sample\s(?<currentSamples>\d*)\/(?<totalSamples>\d*)/; //FOR CYCLES
+                regex = /Fra:(?<frame>\d*).*Rendering\s(?<currentSamples>\d*)\s\/\s(?<totalSamples>\d*)\ssamples/;
+                matches = line.match(regex);
 
-            if (matches && matches.groups) {
-                this.frame = parseInt(matches.groups.frame);
-                this.currentSamples = parseInt(matches.groups.currentSamples);
-                this.totalSamples = parseInt(matches.groups.totalSamples);
+                if (matches && matches.groups) {
+                    this.currentSamples = parseInt(matches.groups.currentSamples);
+                    this.totalSamples = parseInt(matches.groups.totalSamples);
+                    this.currentFrameProgress = this.currentSamples / this.totalSamples;
+                }
             }
+
+            //Parsing last frame time values
+            regex = /Fra:(?<frame>\d*).*Time:\s(?<minutes>\d*)\:(?<seconds>\d*)\.(?<hundredth>\d*)\s\(Saving/;
+            matches = line.match(regex);
+            if (matches && matches.groups)
+                this.lastFrameTime = this.computeTimeValues(matches.groups.minutes, matches.groups.seconds, matches.groups.hundredth);
+           
 
             if (this.canPreviewFile) {
                 //Parsing last frame file path
@@ -287,15 +319,6 @@ export class RenderJob {
                 }
             }
 
-
-            //Parsing last frame time values
-            regex = /Time:\s(?<minutes>\d*)\:(?<seconds>\d*)\.(?<hundredth>\d*)\s\(Saving/;
-            matches = line.match(regex);
-            if (matches && matches.groups)
-                this.lastFrameTime = this.computeTimeValues(matches.groups.minutes, matches.groups.seconds, matches.groups.hundredth);
-
-
-
             this.updateTime();
 
             this.progress = (this.frame - this.renderItem.startFrame) / (this.renderItem.endFrame - this.renderItem.startFrame + 1);
@@ -305,6 +328,7 @@ export class RenderJob {
             }
 
             this.onUpdate();
+            
         } catch (error) {
             console.warn(error);
         }
@@ -326,7 +350,7 @@ export class RenderJob {
     }
 
     public get isFrameInitializing() {
-        return (this.currentFrameInitialRemainingTime === -1);
+        return (this.currentFrameProgress === -1);
     }
 }
 
@@ -343,7 +367,7 @@ export const ShowSaveDialog = (path: string) => {
                 });
         } catch (error) {
             console.warn('ShowSaveDialog(), electron not started, can\'t open dialog');
-            resolve({filePath: "/Fake/Folder/path"});
+            resolve({ filePath: "/Fake/Folder/path" });
         }
     });
 }

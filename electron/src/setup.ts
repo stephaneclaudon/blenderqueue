@@ -117,6 +117,7 @@ export class ElectronCapacitorApp {
       resizable: false,
       fullscreen: false,
       fullscreenable: false,
+      frame: false,
       webPreferences: {
         nodeIntegration: true,
         contextIsolation: true,
@@ -216,6 +217,15 @@ export class ElectronCapacitorApp {
         }
         CapElectronEventEmitter.emit('CAPELECTRON_DeeplinkListenerInitialized', '');
       }, 400);
+    });
+
+
+    app.setAboutPanelOptions({
+      applicationName: app.getName(), 
+      applicationVersion: app.getVersion(),
+      version: app.getVersion(),
+      credits: "Stéphane Claudon",
+      copyright: "GNU General Public License"
     });
   }
 }
