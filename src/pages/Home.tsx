@@ -263,16 +263,6 @@ const Home: React.FC = () => {
   let renderAvailable = hasNextRenderableItem(currentRenderId);
   canRender = renderAvailable && !(renderJob && renderJob.running);
 
-
-
-
-
-
-
-
-
-
-
   return (
 
     <IonPage>
@@ -294,7 +284,7 @@ const Home: React.FC = () => {
                     setPaused(true);
                     renderJob.pauseRender();
                   }} color="primary">
-                    <IonIcon icon={pause} slot="start" name="pause"></IonIcon>
+                    <IonIcon icon={pause} slot="start"></IonIcon>
                     Pause
                   </IonButton>
                 }
@@ -303,7 +293,7 @@ const Home: React.FC = () => {
                     setPaused(false);
                     renderJob.resumeRender();
                   }} color="warning">
-                    <IonIcon icon={play} slot="start" name="play"></IonIcon>
+                    <IonIcon icon={play} slot="start"></IonIcon>
                     Resume
                   </IonButton>
                 }
@@ -311,13 +301,13 @@ const Home: React.FC = () => {
                   <IonButton onClick={() => {
                     renderJob?.stopRender()
                   }} color="danger">
-                    <IonIcon icon={stopSharp} slot="start" name="stop"></IonIcon>
+                    <IonIcon icon={stopSharp} slot="start"></IonIcon>
                     Stop
                   </IonButton>
                 }
                 {!(renderJob && renderJob.running) &&
                   <IonButton disabled={!canRender} onClick={() => setCurrentRenderId(getNextRenderableItemId(currentRenderId))} color="primary">
-                    <IonIcon icon={playOutline} slot="start" name="render"></IonIcon>
+                    <IonIcon icon={playOutline} slot="start"></IonIcon>
                     Render
                   </IonButton>
                 }

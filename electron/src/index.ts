@@ -150,13 +150,28 @@ dataManager.init().then((response: string) => {
 
 
 const tmpFolderPath = path.join(app.getAppPath(), 'app', 'tmp');
-const blenderExtractScriptsPath = path.join(app.getAppPath(), 'assets', 'blender', 'BlenderExtract.py');
+//const blenderExtractScriptsPath = path.join(app.getAppPath(), 'assets', 'blender', 'BlenderExtract.py');
+console.log("app.isPackaged", app.isPackaged);
+
+const resourcePath = app.isPackaged
+  ? process.resourcesPath
+  : app.getAppPath();
+const blenderExtractScriptsPath = path.join(resourcePath, 'assets', 'blender', 'BlenderExtract.py');
 
 
 ipcMain.handle('BlenderExtract', async (event, arg: Object) => {
   let blenderBinary = dataManager.data.settings.blenderBinaryPath;
   return new Promise(function (resolve, reject) {
     let outputData: string = "";
+    console.log("------ BlenderExtract -----");
+    console.log(blenderBinary);
+    console.log([
+      '-b',
+      arg['blendFile'],
+      '--python',
+      blenderExtractScriptsPath
+    ]);
+
     const spawn = require('child_process').spawn;
     const scriptExecution = spawn(blenderBinary,
       [
@@ -164,10 +179,7 @@ ipcMain.handle('BlenderExtract', async (event, arg: Object) => {
         arg['blendFile'],
         '--python',
         blenderExtractScriptsPath
-      ],
-      {
-        shell: true
-      }
+      ]
     );
     scriptExecution.stdout.setEncoding('utf8');
     scriptExecution.stderr.setEncoding('utf8');
@@ -186,6 +198,8 @@ ipcMain.handle('BlenderExtract', async (event, arg: Object) => {
     scriptExecution.on('exit', (code: any) => {
       try {
         const regexpContent = /---blenderextract---(?<jsonData>(.|\n|\r)*)---blenderextract---/;
+        console.log(outputData);
+
         const match = outputData.match(regexpContent);
         const data = JSON.parse(match.groups.jsonData);
 
@@ -228,10 +242,7 @@ ipcMain.handle('Render', async (event, arg: Object) => {
 
   const child = spawn(
     blenderBinary,
-    arg['args'],
-    {
-      shell: true
-    }
+    arg['args']
   );
   child.stdout.setEncoding('utf8');
   child.stderr.setEncoding('utf8');
@@ -337,10 +348,10 @@ ipcMain.handle('SaveData', async (event, data: Object) => {
 });
 
 const startSavingProgressInfos = () => {
-  console.log("startSavingProgressInfos()",  dataManager.data.settings);
-  
+  console.log("startSavingProgressInfos()", dataManager.data.settings);
+
   if ((dataManager.data.settings.saveProgressInfosGUI || dataManager.data.settings.saveProgressInfosTxt) && dataManager.data.settings.saveProgressInfosPath != '') {
-    setTimeout(() => saveProgressInfos(), 2000);  
+    setTimeout(() => saveProgressInfos(), 2000);
     if (!saveProgressInfosInterval) {
       saveProgressInfosInterval = setInterval(() => saveProgressInfos(), 60000);
     }

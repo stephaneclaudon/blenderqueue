@@ -11,6 +11,9 @@
   "directories": {
     "buildResources": "resources"
   },
+  "extraResources": [
+    "./assets/blender/"
+  ],
   "files": [
     "assets/**/*",
     "build/**/*",
