@@ -197,10 +197,13 @@ ipcMain.handle('SavePreview', async (event, arg: Object) => {
 let saveProgressInfosInterval;
 let renderProcesses = [];
 let renderOutput = "";
+let renderArgs;
 ipcMain.handle('Render', async (event, arg: Object) => {
   renderOutput = "";
+  renderArgs = arg;
   let blenderBinary = dataManager.data.settings.blenderBinaryPath;
 
+  console.log("------- START RENDER --------");
   console.log(blenderBinary, arg['args']);
 
   const child = spawn(
@@ -308,36 +311,42 @@ ipcMain.handle('GetData', async (event) => {
 
 ipcMain.handle('SaveData', async (event, data: Object) => {
   console.log("Index::SaveData()");
-  return dataManager.SaveData(data as BlenderQueueData)
+  return dataManager.SaveData(data as BlenderQueueData);
 });
 
-let count = 0;
 const startSavingProgressInfos = () => {
+  console.log("startSavingProgressInfos()",  dataManager.data.settings);
+  
   if ((dataManager.data.settings.saveProgressInfosGUI || dataManager.data.settings.saveProgressInfosTxt) && dataManager.data.settings.saveProgressInfosPath != '') {
-    saveProgressInfosInterval = setInterval(() => {
-      if (dataManager.data.settings.saveProgressInfosGUI) {
-        try {
-          myCapacitorApp.getMainWindow().webContents.capturePage().then(image => {
-            fs.writeFile(path.join(dataManager.data.settings.saveProgressInfosPath, '_Blender Progress.png'), image.toPNG(), (err) => {
-              if (err) throw err
-            })
-          });
-        }
-        catch (e) { console.error('Failed to capture screen'); console.log(e); }
-      }
-
-
-      if (dataManager.data.settings.saveProgressInfosTxt) {
-        try { fs.writeFileSync(path.join(dataManager.data.settings.saveProgressInfosPath, '_Blender Log.txt'), renderOutput, 'utf-8'); }
-        catch (e) { console.error('Failed to save log file !'); console.log(e); }
-      }
-
-    }, 60000); //Save progress each minutes
-  }
+    setTimeout(() => saveProgressInfos(), 2000);  
+    if (!saveProgressInfosInterval) {
+      saveProgressInfosInterval = setInterval(() => saveProgressInfos(), 60000);
+    }
+  } else
+    stopSavingProgressInfos();
 };
 
 const stopSavingProgressInfos = () => {
   clearInterval(saveProgressInfosInterval);
+  saveProgressInfosInterval = undefined;
+};
+
+const saveProgressInfos = () => {
+  if (dataManager.data.settings.saveProgressInfosGUI) {
+    try {
+      myCapacitorApp.getMainWindow().webContents.capturePage().then(image => {
+        fs.writeFile(path.join(dataManager.data.settings.saveProgressInfosPath, '_Blender Progress.png'), image.toPNG(), (err) => {
+          if (err) throw err
+        })
+      });
+    }
+    catch (e) { console.error('Failed to capture screen'); console.log(e); }
+  }
+
+  if (dataManager.data.settings.saveProgressInfosTxt) {
+    try { fs.writeFileSync(path.join(dataManager.data.settings.saveProgressInfosPath, renderArgs['logFileName']), renderOutput, 'utf-8'); }
+    catch (e) { console.error('Failed to save log file !'); console.log(e); }
+  }
 };
 
 const onAppQuit = () => {

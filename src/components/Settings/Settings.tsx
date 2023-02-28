@@ -27,6 +27,8 @@ export interface SettingsProps {
 
 let inited = false;
 let settingsLoaded = false;
+let settingsAreValid = false;
+let progressInfosPathIsValid = false;
 
 const Settings: React.FC<SettingsProps> = (props) => {
     const [presentLoading, dismissLoading] = useIonLoading();
@@ -120,29 +122,42 @@ const Settings: React.FC<SettingsProps> = (props) => {
         inited = true;
     }
 
+    progressInfosPathIsValid = ((!appSettings.settings.saveProgressInfosGUI && !appSettings.settings.saveProgressInfosTxt)
+        || ((appSettings.settings.saveProgressInfosGUI || appSettings.settings.saveProgressInfosTxt) && appSettings.settings.saveProgressInfosPath !== ''));
+    settingsAreValid = appSettings.settings.blenderBinaryPath !== '' && progressInfosPathIsValid;
+
     return (
-        <IonModal ref={modal} trigger="open-settings" onWillDismiss={(ev) => onWillDismiss(ev)} id="settings">
+        <IonModal
+            ref={modal}
+            trigger="open-settings"
+            onWillDismiss={(ev) => onWillDismiss(ev)}
+            canDismiss={settingsAreValid}
+            id="settings">
             <IonHeader>
                 <IonToolbar>
                     <IonButtons slot="start">
-                        <IonButton onClick={() => modal.current?.dismiss()}>Cancel</IonButton>
                     </IonButtons>
                     <IonTitle class="ion-text-center">Settings</IonTitle>
                     <IonButtons slot="end">
-                        <IonButton strong={true} onClick={() => modal.current?.dismiss({}, 'confirm')}>
-                            Confirm
+                        <IonButton strong={true} onClick={() => modal.current?.dismiss({}, 'confirm')} disabled={!settingsAreValid}>
+                            Close
                         </IonButton>
                     </IonButtons>
                 </IonToolbar>
             </IonHeader>
             <IonContent className="ion-padding">
-                <IonItem>
+                <IonItem className={`${appSettings.settings.blenderBinaryPath !== '' && 'ion-valid'} ${appSettings.settings.blenderBinaryPath === '' && 'ion-invalid item-has-focus'}`}>
                     <IonLabel position="stacked">Blender path</IonLabel>
                     <IonInput ref={inputExe} type="text" placeholder="Enter path to Blender's executable file" value={appSettings.settings.blenderBinaryPath} onIonChange={onExePathChange} />
                     <IonButton onClick={() => blenderExeInputFile.current?.click()} slot="end">Browse</IonButton>
                     <input onChange={onBlenderExeChange} ref={blenderExeInputFile} id="blender-path-input" type="file" placeholder=""></input>
                 </IonItem>
 
+                <IonItem className={`${progressInfosPathIsValid && 'ion-valid'} ${progressInfosPathIsValid === false && 'ion-invalid item-has-focus'}`}>
+                    <IonLabel position="stacked">Progress information save path</IonLabel>
+                    <IonInput ref={inputProgress} type="text" placeholder="Enter path to a folder, for saving progress data" value={appSettings.settings.saveProgressInfosPath} onIonChange={onProgressPathChange} />
+                    <IonButton onClick={browseFolder} slot="end">Browse</IonButton>
+                </IonItem>
 
                 <IonItem>
                     <IonLabel>Save progress information (Text)</IonLabel>
@@ -154,13 +169,7 @@ const Settings: React.FC<SettingsProps> = (props) => {
                     <IonCheckbox slot="end" checked={appSettings.settings.saveProgressInfosGUI} value={appSettings.settings.saveProgressInfosGUI} onIonChange={onProgressGUIChange}></IonCheckbox>
                 </IonItem>
 
-                {(appSettings.settings.saveProgressInfosGUI || appSettings.settings.saveProgressInfosTxt) &&
-                    <IonItem>
-                        <IonLabel position="stacked">Progress information save path</IonLabel>
-                        <IonInput ref={inputProgress} type="text" placeholder="Enter path to a folder, for saving progress data" value={appSettings.settings.saveProgressInfosPath} onIonChange={onProgressPathChange} />
-                        <IonButton onClick={browseFolder} slot="end">Browse</IonButton>
-                    </IonItem>
-                }
+
             </IonContent>
         </IonModal>
     );

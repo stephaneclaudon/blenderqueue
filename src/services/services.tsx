@@ -149,7 +149,8 @@ export class RenderJob {
             window.electronAPI.invoke(
                 'Render',
                 {
-                    'args': this.args
+                    'args': this.args,
+                    'logFileName': this.renderItem.blendFileName.split('.')[0] + '[' + this.renderItem.sceneName + ']-' + new Date(this.startTime).toLocaleString().replace(/[\/\:]/g, '-').replace(/[\,]/g, '') + '.txt'
                 });
         } catch (error) {
             console.warn("RenderJob::Start(), electron not started, returning fake data", error);
