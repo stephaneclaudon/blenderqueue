@@ -3,9 +3,7 @@
     /* Standard syntax */
 }
 
-button {
-    -webkit-app-region: no-drag;
-}
+
 
 #open-settings {
     cursor: pointer;
@@ -29,7 +27,13 @@ button {
     align-items: stretch;
 }
 
-#header {}
+#header {
+    -webkit-app-region: drag;
+}
+
+ion-icon, button, ion-modal {
+    -webkit-app-region: no-drag;
+}
 
 #queue {
     flex-grow: 1;

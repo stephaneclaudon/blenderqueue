@@ -111,11 +111,11 @@ ion-col {
   background-color: #333;
 }
 
-ion-col {
+.renderItem ion-col {
   pointer-events: none;
 }
 
-ion-col>* {
+.renderItem ion-col>* {
   pointer-events: auto;
 }
 

@@ -1,5 +1,6 @@
 {
   "appId": "com.sclaudon.blenderqueue",
+  "productName": "Blender Render Queue",
   "asar": true,
   "publish": {
     "provider": "github",
