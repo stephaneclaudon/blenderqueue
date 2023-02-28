@@ -31,7 +31,7 @@
     -webkit-app-region: drag;
 }
 
-ion-icon, button, ion-modal {
+ion-icon, ion-button, ion-modal {
     -webkit-app-region: no-drag;
 }
 

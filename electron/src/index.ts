@@ -32,6 +32,26 @@ const trayMenuTemplate: (MenuItemConstructorOptions | MenuItem)[] = [new MenuIte
 const appMenuBarMenuTemplate: (MenuItemConstructorOptions | MenuItem)[] = [
   { role: process.platform === 'darwin' ? 'appMenu' : 'fileMenu' },
   { role: 'viewMenu' },
+  {
+    label: "Edit",
+    submenu: [
+      {
+        label: "Cut",
+        accelerator: "CmdOrCtrl+X",
+        role: "cut"
+      },
+      {
+        label: "Copy",
+        accelerator: "CmdOrCtrl+C",
+        role: "copy"
+      },
+      {
+        label: "Paste",
+        accelerator: "CmdOrCtrl+V",
+        role: "paste"
+      }
+    ]
+  }
 ];
 
 // Get Config options from capacitor.config

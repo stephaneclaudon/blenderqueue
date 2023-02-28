@@ -294,7 +294,7 @@ const Home: React.FC = () => {
                     setPaused(true);
                     renderJob.pauseRender();
                   }} color="primary">
-                    <IonIcon icon={pause}></IonIcon>
+                    <IonIcon icon={pause} slot="start" name="pause"></IonIcon>
                     Pause
                   </IonButton>
                 }
@@ -303,7 +303,7 @@ const Home: React.FC = () => {
                     setPaused(false);
                     renderJob.resumeRender();
                   }} color="warning">
-                    <IonIcon icon={play}></IonIcon>
+                    <IonIcon icon={play} slot="start" name="play"></IonIcon>
                     Resume
                   </IonButton>
                 }
@@ -311,13 +311,13 @@ const Home: React.FC = () => {
                   <IonButton onClick={() => {
                     renderJob?.stopRender()
                   }} color="danger">
-                    <IonIcon icon={stopSharp}></IonIcon>
+                    <IonIcon icon={stopSharp} slot="start" name="stop"></IonIcon>
                     Stop
                   </IonButton>
                 }
                 {!(renderJob && renderJob.running) &&
                   <IonButton disabled={!canRender} onClick={() => setCurrentRenderId(getNextRenderableItemId(currentRenderId))} color="primary">
-                    <IonIcon icon={playOutline}></IonIcon>
+                    <IonIcon icon={playOutline} slot="start" name="render"></IonIcon>
                     Render
                   </IonButton>
                 }
