@@ -2,7 +2,7 @@ import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'io.ionic.starter',
-  appName: 'BlenderQueue',
+  appName: 'Blender Render Queue',
   webDir: 'build',
   bundledWebRuntime: false
 };
