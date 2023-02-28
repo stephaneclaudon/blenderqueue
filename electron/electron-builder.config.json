@@ -38,6 +38,7 @@
     "background" : "assets/dmg/background.png"
   },
   "linux": {
-    "icon": "assets/appIcon-512x512.png"
+    "icon": "assets/appIcon-512x512.png",
+    "target": "AppImage"
   }
 }

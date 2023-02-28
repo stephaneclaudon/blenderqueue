@@ -13,7 +13,7 @@
     "build": "tsc && electron-rebuild",
     "electron:start-live": "node ./live-runner.js",
     "electron:start": "npm run build && electron --inspect=5858 ./",
-    "electron:pack": "npm run build && electron-builder build --mac -c ./electron-builder.config.json",
+    "electron:pack": "npm run build && electron-builder build --mac --win --linux -c ./electron-builder.config.json",
     "electron:make": "npm run build && electron-builder build --mac --win --linux -c ./electron-builder.config.json -p always"
   },
   "dependencies": {
