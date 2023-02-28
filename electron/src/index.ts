@@ -228,10 +228,12 @@ ipcMain.handle('Render', async (event, arg: Object) => {
   });
   child.on('close', function (code) {
     myCapacitorApp.getMainWindow()?.webContents.send('onRenderClose', code);
+    saveProgressInfos();
     stopSavingProgressInfos();
   });
   child.on('exit', function (code) {
     myCapacitorApp.getMainWindow()?.webContents.send('onRenderExit', code);
+    saveProgressInfos();
     stopSavingProgressInfos();
   });
 
