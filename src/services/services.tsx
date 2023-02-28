@@ -5,6 +5,7 @@ import { mockoutput } from './data-mock/blender-output-cycles';
 
 export const ENGINE_CYCLES = 'CYCLES';
 export const ENGINE_EEVEE = 'BLENDER_EEVEE';
+export const ENGINE_WORKBENCH = 'BLENDER_WORKBENCH';
 
 export const GetData = () => {
     return new Promise<BlenderQueueData>(function (resolve, reject) {
@@ -127,6 +128,9 @@ export class RenderJob {
         this.startTime = Date.now();
         this.renderItem.status = RenderItemData.STATUS_RENDERING;
         let lines = [];
+
+        if (this.renderItem.sceneData.engine === ENGINE_WORKBENCH)
+            this.frame = this.renderItem.startFrame;
 
         //If electron not started, return fake data
         try {
@@ -262,12 +266,12 @@ export class RenderJob {
             regex = /Fra:(?<frame>\d*).*Time:(?<minutes>\d*)\:(?<seconds>\d*)\.(?<hundredth>\d*)\s/;
             matches = line.match(regex);
             if (matches && matches.groups)
-                
 
 
 
-            //Parsing currentFrame remaining time
-            regex = /Remaining:(?<minutes>\d*)\:(?<seconds>\d*)\.(?<hundredth>\d*)\s\|/;
+
+                //Parsing currentFrame remaining time
+                regex = /Remaining:(?<minutes>\d*)\:(?<seconds>\d*)\.(?<hundredth>\d*)\s\|/;
             matches = line.match(regex);
             if (matches && matches.groups) {
                 this.currentFrameRemainingTime = this.computeTimeValues(matches.groups.minutes, matches.groups.seconds, matches.groups.hundredth);
@@ -305,13 +309,14 @@ export class RenderJob {
             matches = line.match(regex);
             if (matches && matches.groups)
                 this.lastFrameTime = this.computeTimeValues(matches.groups.minutes, matches.groups.seconds, matches.groups.hundredth);
-           
 
-            if (this.canPreviewFile) {
-                //Parsing last frame file path
-                regex = /Saved:\s\'(?<lastFrameFilePath>.*)\'/;
-                matches = line.match(regex);
-                if (matches && matches.groups) {
+            //Parsing last frame file path
+            regex = /Saved:\s\'(?<lastFrameFilePath>.*)\'/;
+            matches = line.match(regex);
+            if (matches && matches.groups) {
+                if (this.renderItem.sceneData.engine === ENGINE_WORKBENCH)
+                    this.frame++;
+                if (this.canPreviewFile) {
                     //@ts-ignore
                     window.electronAPI.invoke('SavePreview', { 'filePath': matches.groups.lastFrameFilePath }).then((previewFilePath: string) => {
                         this.lastFrameFilePath = previewFilePath + '?' + Math.random().toString();
@@ -328,7 +333,7 @@ export class RenderJob {
             }
 
             this.onUpdate();
-            
+
         } catch (error) {
             console.warn(error);
         }

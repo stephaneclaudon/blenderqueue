@@ -150,9 +150,6 @@ dataManager.init().then((response: string) => {
 
 
 const tmpFolderPath = path.join(app.getAppPath(), 'app', 'tmp');
-//const blenderExtractScriptsPath = path.join(app.getAppPath(), 'assets', 'blender', 'BlenderExtract.py');
-console.log("app.isPackaged", app.isPackaged);
-
 const resourcePath = app.isPackaged
   ? process.resourcesPath
   : app.getAppPath();
