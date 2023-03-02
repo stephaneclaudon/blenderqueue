@@ -3,8 +3,8 @@ import { IonContent, IonHeader, IonPage, IonToolbar, IonList, IonButton, IonIcon
 import RenderItem from '../components/RenderItem/RenderItem';
 import InfosContainer from '../components/Infos/InfosContainer';
 import { RenderItemData } from '../data/RenderItemData';
-import { RenderJob } from '../services/services';
-import { cog, pause, play, playOutline, stopSharp } from 'ionicons/icons';
+import * as Services from '../services/services';
+import { alert, closeCircleOutline, closeOutline, cog, pause, play, playOutline, stopSharp } from 'ionicons/icons';
 
 import { useHotkeys } from 'react-hotkeys-hook'
 import { isHotkeyPressed } from 'react-hotkeys-hook'
@@ -16,7 +16,7 @@ import { BlenderQueueData } from '../data/SettingsData';
 
 
 let canRender: boolean = false;
-let renderJob = new RenderJob();
+let renderJob = new Services.RenderJob();
 
 const Home: React.FC = () => {
 
@@ -98,7 +98,7 @@ const Home: React.FC = () => {
   };
 
   const onRenderClose = (code: number) => {
-    renderJob = new RenderJob();
+    renderJob = new Services.RenderJob();
     if (hasNextRenderableItem(currentRenderId)) {
       setCurrentRenderId(getNextRenderableItemId(currentRenderId));
     }
@@ -231,7 +231,6 @@ const Home: React.FC = () => {
     setRenderItems([...renderItems]);
   }
 
-
   /* ------------------------- */
   /* -----    EFFECTS    ----- */
   /* ------------------------- */
@@ -311,6 +310,8 @@ const Home: React.FC = () => {
                     Render
                   </IonButton>
                 }
+
+                <IonIcon onClick={Services.QuitApp} id="quit" size="large" icon={closeOutline}></IonIcon>
 
               </IonCol>
             </IonRow>

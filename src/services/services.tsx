@@ -424,3 +424,15 @@ export const CheckOutputFolder = (path: string) => {
         return false;
     }
 }
+
+export const QuitApp = () => {
+    //If electron not started, return fake data
+    try {
+        //@ts-ignore
+        return window.electronAPI.invoke('QuitApp');
+    }
+    catch (error) {
+        console.warn('QuitApp(), electron not started, can\'t quit app...');
+        return false;
+    }
+}

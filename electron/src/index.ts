@@ -137,7 +137,6 @@ dataManager.init().then((response: string) => {
     // Check for updates if we are in a packaged app.
     autoUpdater.checkForUpdatesAndNotify();
 
-
     setTimeout(() => {
       if (settingsError != "") {
         console.log("blenderExecutablePathError...");
@@ -145,6 +144,24 @@ dataManager.init().then((response: string) => {
       }
     }, 2000);
 
+    myCapacitorApp.getMainWindow().on('close', e => {
+      e.preventDefault();
+      if (rendering) {
+        dialog.showMessageBox({
+          type: 'info',
+          buttons: ['Yes', 'No'],
+          cancelId: 1,
+          defaultId: 0,
+          title: 'Warning',
+          message: 'Still rendering, stop all jobs and quit ?'
+        }).then(({ response, checkboxChecked }) => {
+          if (!response)
+            quitApp();
+
+        });
+      } else
+        quitApp();
+    });
   })();
 });
 
@@ -213,12 +230,13 @@ ipcMain.handle('GetPreview', async (event, arg: Object) => {
   return dataBase64;
 });
 
-
+let rendering = false;
 let saveProgressInfosInterval;
 let renderProcesses = [];
 let renderOutput = "";
 let renderArgs;
 ipcMain.handle('Render', async (event, arg: Object) => {
+  rendering = true;
   renderOutput = "";
   renderArgs = arg;
   let blenderBinary = dataManager.data.settings.blenderBinaryPath;
@@ -230,6 +248,7 @@ ipcMain.handle('Render', async (event, arg: Object) => {
     blenderBinary,
     arg['args']
   );
+
   child.stdout.setEncoding('utf8');
   child.stderr.setEncoding('utf8');
 
@@ -247,11 +266,13 @@ ipcMain.handle('Render', async (event, arg: Object) => {
     myCapacitorApp.getMainWindow()?.webContents.send('onRenderClose', code);
     saveProgressInfos();
     stopSavingProgressInfos();
+    rendering = false;
   });
   child.on('exit', function (code) {
     myCapacitorApp.getMainWindow()?.webContents.send('onRenderExit', code);
     saveProgressInfos();
     stopSavingProgressInfos();
+    rendering = false;
   });
 
   renderProcesses.push(child);
@@ -333,6 +354,11 @@ ipcMain.handle('SaveData', async (event, data: Object) => {
   return dataManager.SaveData(data as BlenderQueueData);
 });
 
+ipcMain.handle('QuitApp', async (event) => {
+  console.log("Index::QuitApp()");
+  myCapacitorApp.getMainWindow().close();
+});
+
 const startSavingProgressInfos = () => {
   console.log("startSavingProgressInfos()", dataManager.data.settings);
 
@@ -368,14 +394,13 @@ const saveProgressInfos = () => {
   }
 };
 
-const onAppQuit = () => {
+const quitApp = () => {
   for (const child of renderProcesses) {
     child.stdout.destroy();
     child.stderr.destroy();
     child.kill('SIGKILL');
   }
   stopSavingProgressInfos();
+  myCapacitorApp.getMainWindow().destroy();
+  app.quit();
 };
-
-app.on('will-quit', onAppQuit);
-app.on('before-quit', onAppQuit);

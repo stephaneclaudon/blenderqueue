@@ -3,9 +3,22 @@
     /* Standard syntax */
 }
 
+*::-webkit-scrollbar {
+    width: 8px;
+    background: transparent;
+}
 
+*::-webkit-scrollbar-thumb {
+    background: var(--ion-color-primary);
+}
 
-#open-settings {
+#quit {
+    transform-origin: center center;
+    transform: translate(0.6em, -0.3em) scale(0.7);
+}
+
+#open-settings,
+#quit {
     cursor: pointer;
     padding: 0 0.5em;
 }
@@ -17,6 +30,10 @@
 
 #open-settings:hover {
     transform: scale(1.08);
+}
+
+#quit:hover {
+    transform: translate(0.6em, -0.3em) scale(1);
 }
 
 
@@ -31,7 +48,9 @@
     -webkit-app-region: drag;
 }
 
-ion-icon, ion-button, ion-modal {
+ion-icon,
+ion-button,
+ion-modal {
     -webkit-app-region: no-drag;
 }
 

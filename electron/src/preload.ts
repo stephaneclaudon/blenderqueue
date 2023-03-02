@@ -23,7 +23,8 @@ contextBridge.exposeInMainWorld(
             "ShowOpenDialog",
             "SetProgress",
             "CheckOutputFolder",
-            "ShowSaveDialog"
+            "ShowSaveDialog",
+            "QuitApp"
         ];
         if (validChannels.includes(channel)) {
             return ipcRenderer.invoke(channel, data);
