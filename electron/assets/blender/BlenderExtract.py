@@ -13,6 +13,7 @@ for scene in bpy.data.scenes:
         "name": scene.name,
         "start": bpy.data.scenes[scene.name].frame_start,
         "end": bpy.data.scenes[scene.name].frame_end,
+        "fps": bpy.data.scenes[scene.name].render.fps,
         "resolution_x": bpy.data.scenes[scene.name].render.resolution_x,
         "resolution_y": bpy.data.scenes[scene.name].render.resolution_y,
         "filepath": bpy.data.scenes[scene.name].render.filepath,

@@ -2,10 +2,7 @@ import { BlenderExtractData } from "../data/BlenderExtractData";
 import { RenderItemData } from "../data/RenderItemData";
 import { BlenderQueueData } from "../data/SettingsData";
 import { mockoutput } from './data-mock/blender-output-cycles';
-
-export const ENGINE_CYCLES = 'CYCLES';
-export const ENGINE_EEVEE = 'BLENDER_EEVEE';
-export const ENGINE_WORKBENCH = 'BLENDER_WORKBENCH';
+import * as CONST from '../constants';
 
 export const GetData = () => {
     return new Promise<BlenderQueueData>(function (resolve, reject) {
@@ -61,7 +58,7 @@ export const GetBlenderFileInfo = async (blendFilePath: string) => {
                 });
         } catch (error) {
             setTimeout(() => {
-                let json: any = JSON.parse('{"scenes":[{"name": "Scene", "start": 1, "end": 250, "resolution_x": 1920, "resolution_y": 1080, "filepath": "/Volumes/DATA/RESSOURCES/_BLENDER SCRIPTS/BlednerExtract/", "file_format": "PNG", "color": "RGBA", "film_transparent": true, "engine": "CYCLES"}, {"name": "Scene.001--Eevvee", "start": 40, "end": 250, "resolution_x": 1920, "resolution_y": 1080, "filepath": "/tmp/", "file_format": "PNG", "color": "RGBA", "film_transparent": false, "engine": "BLENDER_EEVEE"}]}');
+                let json: any = JSON.parse('{"scenes":[{"name": "Scene", "start": 1, "end": 250, "fps": 30, "resolution_x": 1920, "resolution_y": 1080, "filepath": "/Volumes/DATA/RESSOURCES/ES/_BLENDER SCRIPTS/BlednES/_BLENDER SCRIPTS/Bledn_BLENDER SCRIPTS/BlednerExtract/", "file_format": "PNG", "color": "RGBA", "film_transparent": true, "engine": "CYCLES"}, {"name": "Scene.001--Eevvee", "start": 40, "end": 250, "fps": 30, "resolution_x": 1920, "resolution_y": 1080, "filepath": "/tmp/", "file_format": "PNG", "color": "RGBA", "film_transparent": false, "engine": "BLENDER_EEVEE"}]}');
                 let data: BlenderExtractData = Object.assign(new BlenderExtractData(), json);
                 resolve(data);
                 //reject('OUPS');
@@ -129,7 +126,7 @@ export class RenderJob {
         this.renderItem.status = RenderItemData.STATUS_RENDERING;
         let lines = [];
 
-        if (this.renderItem.sceneData.engine === ENGINE_WORKBENCH)
+        if (this.renderItem.sceneData.engine === CONST.ENGINE_WORKBENCH)
             this.frame = this.renderItem.startFrame;
 
         //If electron not started, return fake data
@@ -292,7 +289,7 @@ export class RenderJob {
             */
 
             //Parsing current rendering frame evolution
-            if (this.renderItem.sceneData.engine !== ENGINE_CYCLES) {
+            if (this.renderItem.sceneData.engine !== CONST.ENGINE_CYCLES) {
                 //regex = /Fra:(?<frame>\d*).*Sample\s(?<currentSamples>\d*)\/(?<totalSamples>\d*)/; //FOR CYCLES
                 regex = /Fra:(?<frame>\d*).*Rendering\s(?<currentSamples>\d*)\s\/\s(?<totalSamples>\d*)\ssamples/;
                 matches = line.match(regex);
@@ -305,7 +302,7 @@ export class RenderJob {
             }
 
             //Parsing last frame time values
-            regex = /Fra:(?<frame>\d*).*Time:\s(?<minutes>\d*)\:(?<seconds>\d*)\.(?<hundredth>\d*)\s\(Saving/;
+            regex = /Time:\s(?<minutes>\d*)\:(?<seconds>\d*)\.(?<hundredth>\d*)\s\(Saving/;
             matches = line.match(regex);
             if (matches && matches.groups)
                 this.lastFrameTime = this.computeTimeValues(matches.groups.minutes, matches.groups.seconds, matches.groups.hundredth);
@@ -316,10 +313,8 @@ export class RenderJob {
             regex = /Saved:\s\'(?<lastFrameFilePath>.*)\'/;
             matches = line.match(regex);
             if (matches && matches.groups) {
-                if (this.renderItem.sceneData.engine === ENGINE_WORKBENCH)
+                if (this.renderItem.sceneData.engine === CONST.ENGINE_WORKBENCH)
                     this.frame++;
-                
-                    console.log("this.canPreviewFile", this.canPreviewFile);
                 if (this.canPreviewFile) {
                     //@ts-ignore
                     window.electronAPI.invoke('GetPreview', { 'filePath': matches.groups.lastFrameFilePath }).then((dataBase64: string) => {
@@ -328,6 +323,13 @@ export class RenderJob {
                         console.warn(error);
                     });
                 }
+            }
+
+            //Parsing frame append
+            regex = /Append\sframe\s(?<frame>\d*)/;
+            matches = line.match(regex);
+            if (matches && matches.groups) {
+                this.frame = parseInt(matches.groups.frame);
             }
 
             this.updateTime();

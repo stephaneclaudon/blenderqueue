@@ -3,6 +3,7 @@ export class BlenderExtractSceneData {
     public name: string = "";
     public start: number = 0;
     public end: number = 0;
+    public fps: number = 0;
     public resolution_x: number = 0;
     public resolution_y: number = 0;
     public filepath: string = "";

@@ -135,7 +135,9 @@ dataManager.init().then((response: string) => {
 
     await myCapacitorApp.init();
     // Check for updates if we are in a packaged app.
-    autoUpdater.checkForUpdatesAndNotify();
+    autoUpdater.checkForUpdatesAndNotify().catch(() => {
+      console.error("ERROR : Check for update failed");
+    });
 
     setTimeout(() => {
       if (settingsError != "") {

@@ -3,6 +3,7 @@ import { trashOutline, alertCircleOutline, checkmarkCircleOutline, cogOutline, p
 import { IonCol, IonGrid, IonInput, IonRow, IonToggle, IonProgressBar, IonLabel, IonSelect, IonSelectOption, IonIcon, IonItem, IonReorder, IonPopover, IonContent } from '@ionic/react';
 import { RenderItemData } from '../../data/RenderItemData';
 import * as Services from '../../services/services';
+import * as CONST from '../../constants';
 
 
 import './RenderItem.css';
@@ -131,23 +132,23 @@ const RenderItem: React.FC<RenderItemProps> = (props) => {
             </IonCol>
           </IonRow>
 
-
           {!props.data.isInitializing &&
             <IonRow
               ref={secondRowElement}
               onClick={(event) => onClick(event)}
               className={props.data.expanded ? 'info opened' : 'info closed'}>
-              <IonCol size='2' class="ion-justify-content-start">{props.data.sceneData.engine}</IonCol>
-              <IonCol size='2' class="ion-justify-content-start">{props.data.sceneData.resolution_x}x{props.data.sceneData.resolution_y}px</IonCol>
-              <IonCol size='1' class="ion-justify-content-start">{props.data.sceneData.file_format}</IonCol>
-              <IonCol size='1' class="ion-justify-content-start">{props.data.sceneData.film_transparent ? 'Alpha' : 'No alpha'}</IonCol>
-              <IonCol size='6' class="ion-justify-content-start">
+              <IonCol size='1' class="ion-justify-content-center">{CONST.ENGINE_SHORT_NAMES[props.data.sceneData.engine]}</IonCol>
+              <IonCol size='1' class="ion-justify-content-center">{props.data.sceneData.resolution_x}x{props.data.sceneData.resolution_y}</IonCol>
+              <IonCol size='1' class="ion-justify-content-center">{props.data.sceneData.fps} fps</IonCol>
+              <IonCol size='1' class="ion-justify-content-center">{props.data.sceneData.film_transparent ? 'Transparent' : 'Not transparent'}</IonCol>
+              <IonCol size='1' class="ion-justify-content-center">{props.data.sceneData.file_format} ({props.data.sceneData.color})</IonCol>
+              <IonCol size='7' class="ion-justify-content-start">
                 &nbsp;<a
                   id="context-menu-trigger"
                   onClick={setOutputPath}
                   href="#1"
                   className={props.data.outputFilePathExists ? '' : 'warning'}
-                >{Utils.strippedPath(props.data.outputFilePath)}</a>
+                >{Utils.strippedPath(props.data.outputFilePath, 73)}</a>
 
                 {!props.data.outputFilePathExists &&
                   <><IonIcon id={'warning-output-' + props.index} className='icon-button' size="small" icon={warningOutline}></IonIcon>

@@ -14,7 +14,6 @@ import Settings from '../components/Settings/Settings';
 import DragDrop from '../components/DragDrop/DragDrop';
 import { BlenderQueueData } from '../data/SettingsData';
 
-
 let canRender: boolean = false;
 let renderJob = new Services.RenderJob();
 

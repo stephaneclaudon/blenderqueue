@@ -1,7 +1,7 @@
-export const strippedPath = (path:string) => {
+export const strippedPath = (path:string, length:number) => {
     let str = path;
-    if (path.length > 80)
-        str = path.slice(0, 30) + '......' + path.slice(-50)
+    if (path.length > length)
+        str = path.slice(0, Math.floor(length*0.35)) + '......' + path.slice(-Math.floor(length*0.65))
     return str;
 };
 
