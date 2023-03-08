@@ -1,7 +1,7 @@
 {
   "name": "blenderrenderqueue",
   "productName": "Blender Render Queue",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Standalone render queue for Blender",
   "author": {
     "name": "Stéphane Claudon",
