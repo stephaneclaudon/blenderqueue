@@ -3,6 +3,7 @@ require('./rt/electron-rt');
 // User Defined Preload scripts below
 
 import { contextBridge, ipcRenderer } from 'electron';
+import { UpdateInfo } from 'electron-updater';
 
 contextBridge.exposeInMainWorld(
     "electronAPI", {
@@ -46,6 +47,6 @@ contextBridge.exposeInMainWorld(
         ipcRenderer.removeAllListeners('onRenderExit');
         ipcRenderer.addListener('onRenderExit', callback)
     },
-    blenderExecutablePathError: (callback) => ipcRenderer.on('blenderExecutablePathError', callback),
+    blenderExecutablePathError: (callback) => ipcRenderer.on('blenderExecutablePathError', callback)
 }
 );

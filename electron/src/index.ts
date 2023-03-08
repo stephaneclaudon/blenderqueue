@@ -2,15 +2,15 @@ import type { CapacitorElectronConfig } from '@capacitor-community/electron';
 import { getCapacitorElectronConfig, setupElectronDeepLinking } from '@capacitor-community/electron';
 import { dialog, MenuItemConstructorOptions, shell } from 'electron';
 import { app, MenuItem, ipcMain } from 'electron';
-import { spawn } from "child_process";
+import { execSync, spawn } from "child_process";
 import suspend from "psuspend";
 
 import fs from "fs";
-import os from 'os';
+import os, { platform } from 'os';
 
 import electronIsDev from 'electron-is-dev';
 import unhandled from 'electron-unhandled';
-import { autoUpdater } from 'electron-updater';
+import { autoUpdater, UpdateCheckResult, UpdateInfo } from 'electron-updater';
 import path from 'path';
 
 import { ElectronCapacitorApp, setupContentSecurityPolicy, setupReloadWatcher } from './setup';
@@ -134,17 +134,31 @@ dataManager.init().then((response: string) => {
     console.log("INITING APP--------------------");
 
     await myCapacitorApp.init();
-    // Check for updates if we are in a packaged app.
-    autoUpdater.checkForUpdatesAndNotify().catch(() => {
-      console.error("ERROR : Check for update failed");
-    });
 
-    setTimeout(() => {
-      if (settingsError != "") {
+    // Since the app is unsigned, autoupdate won't work so we ask to update manually
+    if (isMac) {
+      autoUpdater.on('update-available', (infos: UpdateInfo) => {
+        dialog.showMessageBox({
+          type: 'info',
+          buttons: ['Yes', 'No'],
+          cancelId: 1,
+          defaultId: 0,
+          title: 'Update available !',
+          message: 'A new version (' + infos.version + ') is available, would you like to get it ?'
+        }).then(({ response }) => {
+          if (!response)
+            execSync('open https://github.com/stephaneclaudon/blenderqueue/releases/tag/v' + infos.version);
+        });
+      });
+    }
+
+    if (settingsError != "") {
+      myCapacitorApp.getMainWindow().webContents.on('did-finish-load', () => {
         console.log("blenderExecutablePathError...");
         myCapacitorApp.getMainWindow().webContents.send('blenderExecutablePathError', settingsError);
-      }
-    }, 2000);
+      });
+    }
+
 
     myCapacitorApp.getMainWindow().on('close', e => {
       e.preventDefault();
@@ -163,6 +177,11 @@ dataManager.init().then((response: string) => {
         });
       } else
         quitApp();
+    });
+
+    // Check for updates if we are in a packaged app.
+    autoUpdater.checkForUpdatesAndNotify().catch(() => {
+      console.error("ERROR : Check for update failed");
     });
   })();
 });
@@ -312,6 +331,10 @@ ipcMain.handle('StopRender', async (event, arg: Object) => {
 
 ipcMain.handle('SetProgress', async (event, progress: number) => {
   myCapacitorApp.getMainWindow().setProgressBar(progress);
+});
+
+ipcMain.handle('OpenExternal', async (event, url: string) => {
+  return dialog.showOpenDialog(myCapacitorApp.getMainWindow(), { properties: ['openDirectory'] })
 });
 
 ipcMain.handle('ShowOpenDialog', async (event, filepath: string) => {

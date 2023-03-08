@@ -32,10 +32,13 @@
   "mac": {
     "icon": "assets/appIcon.icns",
     "category": "public.app-category.utilities",
-    "target": "dmg"
+    "target": [
+      "dmg",
+      "zip"
+    ]
   },
   "dmg": {
-    "background" : "assets/dmg/background.png"
+    "background": "assets/dmg/background.png"
   },
   "linux": {
     "icon": "assets/appIcon-512x512.png",
